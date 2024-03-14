@@ -5,7 +5,54 @@ import bcrypt from "bcrypt";
 import fs from "fs";
 import fastcsv from "fast-csv";
 
-// Create a user (ADMIN, PERSONAL, company)
+// Create a user (ADMIN)
+export async function createAdmin(req, res) {
+  try {
+    // Generate unique user id and validation key using nanoid
+    let generatedID = nanoid();
+    const user_id = generatedID;
+
+    // Generate validation key that will be sent via email worker
+    let generatedValidationKey = nanoid();
+    const validation_key = generatedValidationKey;
+
+    // Establish what needs to be included in JSON for POST, and encrypt it
+    const { email, password, fname, lname, company_name } = req.body;
+    if (!email || !password) {
+      return res.status(400).json("Missing required fields");
+    } else {
+      const admin_id = nanoid(); // generate admin id
+      // Inserting encrypted new admin details
+      const salt = await bcrypt.genSalt(10);
+      const encryptedPassword = await bcrypt.hash(password, salt);
+      const validated = false;
+      const newUser = await pool.query(
+        "INSERT INTO users (user_id, fname, lname, email, password, admin_id, validation_key, validated, company) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+        [
+          user_id,
+          fname,
+          lname,
+          email,
+          encryptedPassword,
+          validation_key,
+          validated,
+          admin_id,
+          company,
+          company_name,
+        ]
+      );
+      // Generate a response
+      const apiResponse = {
+        message: "User created successfully. Check email for validation link",
+      };
+      res.status(200).json(newUser.rows[0]);
+    }
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+}
+
+// Create a user (PERSONAL, COMPANY)
 export async function createUser(req, res) {
   try {
     // Generate unique user id and validation key using nanoid
@@ -17,14 +64,11 @@ export async function createUser(req, res) {
     const validation_key = generatedValidationKey;
 
     // Establish what needs to be included in JSON for POST, and encrypt it
-    const { email, password, fname, lname, company, company_name } = req.body;
+    const { email, password, fname, lname, company_name } = req.body;
     if (!email || !password) {
       return res.status(400).json("Missing required fields");
-    } else if (adminRegister === true) {
-      //enable admin checkbox in admin register form
-      const admin_id = nanoid(); // generate admin id
     } else {
-      // Inserting encrypted new admin details
+      // Inserting encrypted new user details
       const salt = await bcrypt.genSalt(10);
       const encryptedPassword = await bcrypt.hash(password, salt);
       const validated = false;
@@ -235,7 +279,7 @@ export async function loginUser(req, res) {
 }
 
 // Get one user - ADMIN
-export async function getOneUser(req, res) {
+export async function getOneUserAdmin(req, res) {
   try {
     // Read data from token
     const authData = req.user;
@@ -281,7 +325,7 @@ export async function getOneUser(req, res) {
 }
 
 // Get all users - ADMIN
-export async function getAllUsers(req, res) {
+export async function getAllUsersAdmin(req, res) {
   try {
     // Read data from token
     const authData = req.user;
@@ -367,8 +411,8 @@ export async function updateUserAdmin(req, res) {
           lname: updateUserAdminRead.rows[0].lname,
           email: updateUserAdminRead.rows[0].email,
           password: password,
-          company_name: updateUserAdminRead[0].company_name,
           admin_id: updateUserAdminRead.rows[0].admin_id,
+          company_name: updateUserAdminRead[0].company_name,
         };
 
         res.status(200).json(newUserData);
