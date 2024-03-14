@@ -493,8 +493,6 @@ export async function deleteUserAdmin(req, res) {
       );
       if (deleteUser.rowCount === 0) {
         return res.status(404).json("Email not found");
-      } else if (deleteUser.email === email) {
-        return res.status(404).json("Cannot delete own account. Aborting...");
       } else {
         res.json("User has been deleted");
       }
