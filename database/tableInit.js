@@ -28,7 +28,7 @@ export async function createVehicleTable() {
 export async function createServiceTable() {
   try {
     const createTableQuery = await pool.query(
-      'CREATE TABLE IF NOT EXISTS "service" ( service_id VARCHAR(225) UNIQUE NOT NULL PRIMARY KEY, next_mileage INTEGER NOT NULL, next_service_date DATE, cost INTEGER NOT NULL, service_name VARCHAR(255) NOT NULL, place VARCHAR(255), notes VARCHAR(1000), service_date DATE NOT NULL, creation_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, vehicle_id VARCHAR(225) REFERENCES "vehicle"(vehicle_id) )'
+      'CREATE TABLE IF NOT EXISTS "service" ( service_id VARCHAR(225) UNIQUE NOT NULL PRIMARY KEY, next_mileage INTEGER NOT NULL, next_date DATE, cost INTEGER NOT NULL, service_name VARCHAR(255) NOT NULL, place VARCHAR(255), notes VARCHAR(1000), service_date DATE NOT NULL, creation_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, vehicle_id VARCHAR(225) REFERENCES "vehicle"(vehicle_id), user_id VARCHAR(225) REFERENCES "user"(user_id) )'
     );
     console.log("service table created successfully");
   } catch (error) {

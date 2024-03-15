@@ -24,19 +24,18 @@ export async function createService(req, res) {
         place,
         note,
         service_date,
+        vehicle_id,
       } = req.body;
     }
-    if (!next_mileage || !cost || !service_name || !service_date || !mileage) {
-      return res.status(400).json("Missing required fields");
+    if (!vehicle_id) {
+      return res.status(400).json("Missing vehicle_id");
     } else {
       // Generate service_id using nanoid
       let generatedID = nanoid();
       const service_id = generatedID;
-      // Obtain service_id from address bar
-      const service_id = req.params;
       // Insert details into service table
       const newService = await pool.query(
-        "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, note, service_date, service_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+        "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, note, service_date, vehicle_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
         [
           service_id,
           next_mileage,
@@ -46,7 +45,7 @@ export async function createService(req, res) {
           place,
           note,
           service_date,
-          service_id,
+          vehicle_id,
         ]
       );
 
@@ -67,7 +66,7 @@ export async function createService(req, res) {
           place: readNewService.rows[0].place,
           note: readNewService.rows[0].note,
           service_date: readNewService.rows[0].service_date,
-          service_id: readNewService.rows[0].service_id,
+          vehicle_id: readNewService.rows[0].vehicle_id,
         },
       };
       res.json(apiResponse);
@@ -135,23 +134,23 @@ export async function getAllserviceOneUserAdmin(req, res) {
       return res.status(404).json("Admin id not found. Not authorized!");
     } else {
       // List all links in links table from one user
-      const allservice = await pool.query(
+      const allService = await pool.query(
         "SELECT * FROM service WHERE email = $1",
         [email]
       );
-      if (allservice.rowCount === 0) {
+      if (allService.rowCount === 0) {
         return res.status(404).json("No service with specified email");
       }
       // Generate CSV file
       if (generateCSV === false) {
         console.log("CSV not generated.");
-        return res.json(allservice.rows);
+        return res.json(allService.rows);
       } else if (generateCSV === true) {
-        const jsonData = JSON.parse(JSON.stringify(allservice.rows));
+        const jsonData = JSON.parse(JSON.stringify(allService.rows));
 
         fastcsv.write(jsonData, { headers: true }).pipe(ws);
         console.log("all_service_one_user_admin.csv generated");
-        return res.json(allservice.rows);
+        return res.json(allService.rows);
       } else {
         return res.json(
           "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
@@ -164,13 +163,13 @@ export async function getAllserviceOneUserAdmin(req, res) {
 }
 
 // Get all service - USER
-export async function getAllservice(req, res) {
+export async function getAllService(req, res) {
   try {
     // Read user_id data from token
     const authData = req.user;
     const user_id = authData.user_id;
     const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("all_your_service_user.csv");
+    const ws = fs.createWriteStream("all_your_Service_user.csv");
 
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
@@ -180,23 +179,23 @@ export async function getAllservice(req, res) {
       return res.status(404).json("User id not found.");
     } else {
       // List all service in service table where the user_id is same as in token
-      const allservice = await pool.query(
+      const allService = await pool.query(
         "SELECT * FROM service WHERE user_id = $1",
         [user_id]
       );
-      if (allservice.rowCount === 0) {
+      if (allService.rowCount === 0) {
         return res.status(404).json("No service with specified user_id");
       } else {
         // Generate CSV file
         if (generateCSV === false) {
           console.log("CSV not generated.");
-          return res.json(allservice.rows);
+          return res.json(allService.rows);
         } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(allservice.rows));
+          const jsonData = JSON.parse(JSON.stringify(allService.rows));
 
           fastcsv.write(jsonData, { headers: true }).pipe(ws);
           console.log("all_your_services_user.csv generated");
-          return res.json(allservice.rows);
+          return res.json(allService.rows);
         } else {
           return res.json(
             "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
@@ -210,7 +209,7 @@ export async function getAllservice(req, res) {
 }
 
 //Get one service - ADMIN
-export async function getOneserviceAdmin(req, res) {
+export async function getOneServiceAdmin(req, res) {
   try {
     // Read admin_id from token
     const authData = req.user;
@@ -227,23 +226,23 @@ export async function getOneserviceAdmin(req, res) {
     } else {
       // Get data from shorturl
       const { service_id } = req.body;
-      const oneservice = await pool.query(
+      const oneService = await pool.query(
         "SELECT * FROM service WHERE service_id=$1",
         [service_id]
       );
-      if (oneservice.rowCount === 0) {
+      if (oneService.rowCount === 0) {
         return res.status(404).json("No service with specified service_id");
       } else {
         // Generate CSV file
         if (generateCSV === false) {
           console.log("CSV not generated.");
-          return res.json(oneservice.rows);
+          return res.json(oneService.rows);
         } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(oneservice.rows));
+          const jsonData = JSON.parse(JSON.stringify(oneService.rows));
 
           fastcsv.write(jsonData, { headers: true }).pipe(ws);
           console.log("one_link_admin.csv generated");
-          return res.json(oneservice.rows);
+          return res.json(oneService.rows);
         } else {
           return res.json(
             "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
@@ -257,7 +256,7 @@ export async function getOneserviceAdmin(req, res) {
 }
 
 //Get one service - USER
-export async function getOneservice(req, res) {
+export async function getOneService(req, res) {
   try {
     // Read user_id data from token
     const authData = req.user;
@@ -272,25 +271,25 @@ export async function getOneservice(req, res) {
     if (checkUserID.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      // Get data from shorturl
+      // Get data from service_id
       const { service_id } = req.body;
-      const oneservice = await pool.query(
+      const oneService = await pool.query(
         "SELECT * FROM service WHERE (service_id)  = $1",
         [service_id]
       );
-      if (oneservice.rowCount === 0) {
+      if (oneService.rowCount === 0) {
         return res.status(404).json("No service with specified service_id");
       } else {
         // Generate CSV file
         if (generateCSV === false) {
           console.log("CSV not generated.");
-          return res.json(oneservice.rows);
+          return res.json(oneService.rows);
         } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(oneservice.rows));
+          const jsonData = JSON.parse(JSON.stringify(oneService.rows));
 
           fastcsv.write(jsonData, { headers: true }).pipe(ws);
           console.log("one_service_user.csv generated");
-          return res.json(oneservice.rows);
+          return res.json(oneService.rows);
         } else {
           return res.json(
             "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
@@ -304,7 +303,7 @@ export async function getOneservice(req, res) {
 }
 
 // Update a service - USER
-export async function updateserviceUser(req, res) {
+export async function updateServiceUser(req, res) {
   try {
     // Read data from token
     const authData = req.user;
@@ -320,38 +319,54 @@ export async function updateserviceUser(req, res) {
     } else {
       const {
         service_id,
-        vname,
-        reg_num,
-        brand,
-        model,
-        purchase_year,
-        mileage,
+        next_mileage,
+        next_date,
+        cost,
+        service_name,
+        place,
+        note,
+        service_date,
+        vehicle_id,
       } = req.body;
-
+    }
+    if (!service_id) {
+      return res.status(400).json("Insert service_id");
+    } else {
       // Update links with user_id specified in token
-      const updateservice = await pool.query(
-        "UPDATE service SET (vname, reg_num, brand, model, purchase_year, mileage) = ($1, $2, $3, $4, $5, $6) WHERE service_id= $7",
-        [vname, reg_num, brand, model, purchase_year, mileage, service_id]
+      const updateService = await pool.query(
+        "UPDATE service SET (next_mileage, next_date, cost, service_name, place, note, service_date, vehicle_id,) = ($1, $2, $3, $4, $5, $6, $7, $8) WHERE service_id= $9",
+        [
+          next_mileage,
+          next_date,
+          cost,
+          service_name,
+          place,
+          note,
+          service_date,
+          vehicle_id,
+          service_id,
+        ]
       );
 
       // Read back new data from user_id
-      const updateserviceRead = await pool.query(
+      const updateServiceRead = await pool.query(
         "SELECT * FROM service WHERE service_id = $1",
         [service_id]
       );
 
-      const updatedserviceData = {
-        message: "Link data has been updated",
-        vname: updateserviceRead.rows[0].vname,
-        reg_num: updateserviceRead.rows[0].reg_num,
-        brand: updateserviceRead.rows[0].brand,
-        model: updateserviceRead.rows[0].moddel,
-        purchase_year: updateserviceRead.rows[0].purchase_year,
-        mileage: updateserviceRead.rows[0].mileage,
-        service_id: updateserviceRead.rows[0].service_id,
+      const updatedServiceData = {
+        service_id: updateServiceRead.rows[0].service_id,
+        next_mileage: updateServiceRead.rows[0].next_mileage,
+        next_date: updateServiceRead.rows[0].next_date,
+        cost: updateServiceRead.rows[0].cost,
+        service_name: updateServiceRead.rows[0].service_name,
+        place: updateServiceRead.rows[0].place,
+        note: updateServiceRead.rows[0].note,
+        service_date: updateServiceRead.rows[0].service_date,
+        vehicle_id: updateServiceRead.rows[0].vehicle_id,
       };
 
-      res.status(200).json(updatedserviceData);
+      res.status(200).json(updatedServiceData);
     }
   } catch (error) {
     res.status(500).json(error.message);
@@ -387,7 +402,7 @@ export async function deleteOneServiceAdmin(req, res) {
 }
 
 // Delete a service - USER
-export async function deleteOneservice(req, res) {
+export async function deleteOneService(req, res) {
   try {
     const authData = req.user;
     const user_id = authData.user_id;
@@ -399,11 +414,11 @@ export async function deleteOneservice(req, res) {
       return res.status(404).json("User id not found.");
     } else {
       const service_id = req.body;
-      const deleteOneservice = await pool.query(
+      const deleteOneService = await pool.query(
         "DELETE FROM service WHERE (service_id, user_id) = ($1, $2)",
         [service_id, user_id]
       );
-      if (deleteOneservice.rowCount === 0) {
+      if (deleteOneService.rowCount === 0) {
         return res
           .status(404)
           .json("service not found or the service is not yours.");
