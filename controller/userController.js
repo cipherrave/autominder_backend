@@ -325,7 +325,7 @@ export async function getOneUserAdmin(req, res) {
 }
 
 // Get all users - ADMIN
-export async function getAllUsersAdmin(req, res) {
+export async function getAllUserAdmin(req, res) {
   try {
     // Read data from token
     const authData = req.user;

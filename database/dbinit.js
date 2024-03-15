@@ -1,11 +1,11 @@
 import {
-  createVehiclesTable,
-  createServiceRecordsTable,
-  createUsersTable,
+  createServiceTable,
+  createUserTable,
+  createVehicleTable,
 } from "./tableInit.js";
 
 export default async function dbInit() {
-  await createUsersTable();
-  await createVehiclesTable();
-  await createServiceRecordsTable();
+  await createUserTable();
+  await createVehicleTable();
+  await createServiceTable();
 }

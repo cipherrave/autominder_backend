@@ -25,13 +25,13 @@ export async function createVehicleTable() {
 }
 
 // create Service_records table if is not exist
-export async function createServiceRecordTable() {
+export async function createServiceTable() {
   try {
     const createTableQuery = await pool.query(
-      'CREATE TABLE IF NOT EXISTS "service_record" ( service_id VARCHAR(225) UNIQUE NOT NULL PRIMARY KEY, next_mileage INTEGER NOT NULL, next_service_date DATE, cost INTEGER NOT NULL, service_name VARCHAR(255) NOT NULL, place VARCHAR(255), notes VARCHAR(1000), service_date DATE NOT NULL, creation_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, vehicle_id VARCHAR(225) REFERENCES "vehicle"(vehicle_id) )'
+      'CREATE TABLE IF NOT EXISTS "service" ( service_id VARCHAR(225) UNIQUE NOT NULL PRIMARY KEY, next_mileage INTEGER NOT NULL, next_service_date DATE, cost INTEGER NOT NULL, service_name VARCHAR(255) NOT NULL, place VARCHAR(255), notes VARCHAR(1000), service_date DATE NOT NULL, creation_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, vehicle_id VARCHAR(225) REFERENCES "vehicle"(vehicle_id) )'
     );
-    console.log("service_records table created successfully");
+    console.log("service table created successfully");
   } catch (error) {
-    console.log(error, "Error creating redirect_analytics table");
+    console.log(error, "Error creating service table");
   }
 }

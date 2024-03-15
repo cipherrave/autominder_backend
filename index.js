@@ -5,19 +5,28 @@ import dotenv from "dotenv";
 import {
   createAdmin,
   createUser,
-  deleteUser,
-  deleteUserAdmin,
-  getAllUsers,
-  getOneUser,
+  validateAccount,
   loginAdmin,
   loginUser,
-  updateUser,
+  getOneUserAdmin,
+  getAllUserAdmin,
   updateUserAdmin,
-  validateAccount,
+  updateUser,
+  deleteUserAdmin,
+  deleteUser,
 } from "./controller/userController.js";
-import { redirectController } from "./controller/redirectController.js";
 import isAuth from "./utils/isAuth.js";
 import { errorPage, homePage } from "./controller/pageController.js";
+import {
+  createVehicle,
+  deleteOneVehicleAdmin,
+  deleteVehicleUser,
+  getAllVehicle,
+  getAllVehicleOneUserAdmin,
+  getOneVehicle,
+  getOneVehicleAdmin,
+  updateVehicleUser,
+} from "./controller/vehicleController.js";
 
 const app = express();
 //import links
@@ -46,8 +55,8 @@ app.get("/validate/:validation_key", validateAccount);
 // Admin Routes
 app.post("/register/admin", createAdmin);
 app.post("/login/admin", loginAdmin);
-app.get("/admin/users/", isAuth, getOneUser);
-app.get("/admin/users/all", isAuth, getAllUsers);
+app.get("/admin/users/", isAuth, getOneUserAdmin);
+app.get("/admin/users/all", isAuth, getAllUserAdmin);
 app.put("/admin/updateUser", isAuth, updateUserAdmin);
 app.delete("/admin/deleteUser", isAuth, deleteUserAdmin);
 
@@ -60,20 +69,17 @@ app.put("/user/updateUser", isAuth, updateUser);
 app.delete("/user/deleteUser", isAuth, deleteUser);
 
 // Admin Vehicle Routes
-app.get("/admin/links", isAuth, getOneLinkAdmin);
-app.get("/admin/links/all", isAuth, getAllLinksAdmin);
-app.post("/admin/links/user/all", isAuth, getAllLinksOneUserAdmin);
-app.delete("/admin/links/delete", isAuth, deleteOneLinkAdmin);
+app.get("/admin/vehicle", isAuth, getOneVehicleAdmin);
+app.get("/admin/vehicle/all", isAuth, getAllVehicle);
+app.post("/admin/vehicle/user/all", isAuth, getAllVehicleOneUserAdmin);
+app.delete("/admin/vehicle/delete", isAuth, deleteOneVehicleAdmin);
 
 // User Vehicle Routes
-app.post("/links/create", isAuth, createLink);
-app.get("/user/links", isAuth, getOneLink);
-app.get("/user/links/all", isAuth, getAllLinks);
-app.put("/user/links/update", isAuth, updateLinkUser);
-app.delete("/user/links/delete", isAuth, deleteOneLink);
-
-// Redirect route
-app.get("/:shorturl", redirectController);
+app.post("/links/create", isAuth, createVehicle);
+app.get("/user/links", isAuth, getOneVehicle);
+app.get("/user/links/all", isAuth, getAllVehicle);
+app.put("/user/links/update", isAuth, updateVehicleUser);
+app.delete("/user/links/delete", isAuth, deleteVehicleUser);
 
 //PORT
 app.listen(port, () => {
