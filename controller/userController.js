@@ -322,7 +322,7 @@ export async function updateUserAdmin(req, res) {
   }
 }
 
-// Update a users - users
+// Update a user - USER, COMPANY
 export async function updateUser(req, res) {
   try {
     // Read data from token
@@ -337,15 +337,15 @@ export async function updateUser(req, res) {
     if (checkUserId.rowCount === 0) {
       return res.status(404).json("users id not found.");
     } else {
-      const { fname, lname, email, password } = req.body;
+      const { fname, lname, password, company_name } = req.body;
       // Generate password hash
       const salt = await bcrypt.genSalt(10);
       const encryptedPassword = await bcrypt.hash(password, salt);
 
       // Update users with user_id specified in token
       const updateUser = await pool.query(
-        "UPDATE users SET (fname, lname, email, password) = ($1, $2, $3, $4) WHERE user_id= $5",
-        [fname, lname, email, encryptedPassword, user_id]
+        "UPDATE users SET (fname, lname, password, company_name) = ($1, $2, $3, $4) WHERE user_id= $6",
+        [fname, lname, encryptedPassword, company_name, user_id]
       );
 
       // Read back new data from user_id
@@ -361,6 +361,7 @@ export async function updateUser(req, res) {
         lname: updateUserRead.rows[0].lname,
         email: updateUserRead.rows[0].email,
         password: password,
+        company_name: updateUserRead.rows[0].company_name,
       };
 
       res.status(200).json(newUserData);
