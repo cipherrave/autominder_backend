@@ -73,7 +73,7 @@ export async function createUser(req, res) {
       const encryptedPassword = await bcrypt.hash(password, salt);
       const validated = false;
       const newUser = await pool.query(
-        "INSERT INTO users (user_id, fname, lname, email, password, admin_id, validation_key, validated, company) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+        "INSERT INTO users (user_id, fname, lname, email, password, validation_key, validated, company) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
         [
           user_id,
           fname,
@@ -82,7 +82,6 @@ export async function createUser(req, res) {
           encryptedPassword,
           validation_key,
           validated,
-          admin_id,
           company,
           company_name,
         ]
