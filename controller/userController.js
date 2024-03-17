@@ -64,7 +64,7 @@ export async function createUser(req, res) {
     const validation_key = generatedValidationKey;
 
     // Establish what needs to be included in JSON for POST, and encrypt it
-    const { email, password, fname, lname, company_name } = req.body;
+    const { email, password, fname, lname, company, company_name } = req.body;
     if (!email || !password) {
       return res.status(400).json("Missing required fields");
     } else {
