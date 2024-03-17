@@ -3,10 +3,8 @@ import dbInit from "./database/dbinit.js";
 import healthCheck from "./controller/healthCheck.js";
 import dotenv from "dotenv";
 import {
-  createAdmin,
   createUser,
   validateAccount,
-  loginAdmin,
   loginUser,
   getOneUserAdmin,
   getAllUserAdmin,
@@ -53,8 +51,6 @@ app.get("/health", healthCheck);
 app.get("/validate/:validation_key", validateAccount);
 
 // Admin Routes
-app.post("/register/admin", createAdmin);
-app.post("/login/admin", loginAdmin);
 app.get("/admin/users/", isAuth, getOneUserAdmin);
 app.get("/admin/users/all", isAuth, getAllUserAdmin);
 app.put("/admin/updateUser", isAuth, updateUserAdmin);
