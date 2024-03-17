@@ -27,7 +27,7 @@ export async function createAdmin(req, res) {
       const encryptedPassword = await bcrypt.hash(password, salt);
       const validated = false;
       const newUser = await pool.query(
-        "INSERT INTO users (user_id, fname, lname, email, password, admin_id, validation_key, validated, company) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+        "INSERT INTO user (user_id, fname, lname, email, password, admin_id, validation_key, validated, company) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
         [
           user_id,
           fname,
@@ -73,7 +73,7 @@ export async function createUser(req, res) {
       const encryptedPassword = await bcrypt.hash(password, salt);
       const validated = false;
       const newUser = await pool.query(
-        "INSERT INTO users (user_id, fname, lname, email, password, validation_key, validated, company) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        "INSERT INTO user (user_id, fname, lname, email, password, validation_key, validated, company) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
         [
           user_id,
           fname,
@@ -103,7 +103,7 @@ export async function validateAccount(req, res) {
     // Check validation key from url given in email
     let { validation_key } = req.params;
     const isValidationKeyValid = await pool.query(
-      "SELECT * FROM users WHERE validation_key = $1",
+      "SELECT * FROM user WHERE validation_key = $1",
       [validation_key]
     );
     if (isValidationKeyValid.rowCount === 0) {
@@ -113,7 +113,7 @@ export async function validateAccount(req, res) {
     } else {
       const user_id = isValidationKeyValid.rows[0].user_id;
       const validValidationKey = await pool.query(
-        "UPDATE users SET validated = true WHERE user_id = $1",
+        "UPDATE user SET validated = true WHERE user_id = $1",
         [user_id]
       );
 
@@ -139,7 +139,7 @@ export async function loginAdmin(req, res) {
     } else {
       // Check Admin email availability
       const checkAdminEmail = await pool.query(
-        "SELECT * FROM users WHERE  email = $1",
+        "SELECT * FROM user WHERE  email = $1",
         [email]
       );
       if (checkAdminEmail.rowCount === 0) {
@@ -147,7 +147,7 @@ export async function loginAdmin(req, res) {
       } else {
         // Check Admin id availability
         const checkAdminId = await pool.query(
-          "SELECT admin_id FROM users WHERE email = $1",
+          "SELECT admin_id FROM user WHERE email = $1",
           [email]
         );
         if (checkAdminId.rowCount === 0) {
@@ -164,7 +164,7 @@ export async function loginAdmin(req, res) {
             // Check validation status
             const validated = true;
             const checkValidationStatus = await pool.query(
-              "SELECT validated FROM users WHERE (email, validated) = ($1, $2)",
+              "SELECT validated FROM user WHERE (email, validated) = ($1, $2)",
               [email, validated]
             );
             if (checkValidationStatus.rowCount === 0) {
@@ -217,7 +217,7 @@ export async function loginUser(req, res) {
     } else {
       // Check user email availability
       const checkEmail = await pool.query(
-        "SELECT * FROM users WHERE email = $1",
+        "SELECT * FROM user WHERE email = $1",
         [email]
       );
       if (checkEmail.rowCount === 0) {
@@ -234,7 +234,7 @@ export async function loginUser(req, res) {
           // Check validation status
           const validated = true;
           const checkValidationStatus = await pool.query(
-            "SELECT validated FROM users WHERE (email, validated) = ($1, $2)",
+            "SELECT validated FROM user WHERE (email, validated) = ($1, $2)",
             [email, validated]
           );
           if (checkValidationStatus.rowCount === 0) {
@@ -288,7 +288,7 @@ export async function getOneUserAdmin(req, res) {
 
     // Check admin id availability in token
     const checkAdminId = await pool.query(
-      "SELECT * FROM users WHERE admin_id = $1",
+      "SELECT * FROM user WHERE admin_id = $1",
       [admin_id]
     );
     if (checkAdminId.rowCount === 0) {
@@ -296,7 +296,7 @@ export async function getOneUserAdmin(req, res) {
     } else {
       // Enter email of user/admin to get info from
       const { email } = req.body;
-      const oneUser = await pool.query("SELECT * FROM users WHERE email = $1", [
+      const oneUser = await pool.query("SELECT * FROM user WHERE email = $1", [
         email,
       ]);
       if (oneUser.rowCount === 0) {
@@ -323,35 +323,35 @@ export async function getOneUserAdmin(req, res) {
   }
 }
 
-// Get all users - ADMIN
+// Get all user - ADMIN
 export async function getAllUserAdmin(req, res) {
   try {
     // Read data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
     const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("all_users_admin.csv");
+    const ws = fs.createWriteStream("all_user_admin.csv");
 
     // Check admin id availability in token
     const checkAdminId = await pool.query(
-      "SELECT * FROM users WHERE admin_id = $1",
+      "SELECT * FROM user WHERE admin_id = $1",
       [admin_id]
     );
     if (checkAdminId.rowCount === 0) {
       return res.status(404).json("Admin id not found. Not Authorized!");
     } else {
-      // Query to list all users in database
-      const allUsers = await pool.query("SELECT * FROM users");
+      // Query to list all user in database
+      const alluser = await pool.query("SELECT * FROM user");
 
       if (generateCSV === false) {
         console.log("CSV not generated.");
-        return res.json(allUsers.rows);
+        return res.json(alluser.rows);
       } else if (generateCSV === true) {
-        const jsonData = JSON.parse(JSON.stringify(allUsers.rows));
+        const jsonData = JSON.parse(JSON.stringify(alluser.rows));
 
         fastcsv.write(jsonData, { headers: true }).pipe(ws);
-        console.log("all_users_admin.csv generated");
-        return res.json(allUsers.rows);
+        console.log("all_user_admin.csv generated");
+        return res.json(alluser.rows);
       } else {
         return res.json(
           "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
@@ -372,7 +372,7 @@ export async function updateUserAdmin(req, res) {
 
     // Check admin id availability in token
     const checkAdminId = await pool.query(
-      "SELECT * FROM users WHERE admin_id = $1",
+      "SELECT * FROM user WHERE admin_id = $1",
       [admin_id]
     );
     if (checkAdminId.rowCount === 0) {
@@ -381,7 +381,7 @@ export async function updateUserAdmin(req, res) {
       const { fname, lname, email, password, user_id, company_name } = req.body;
       // check user_id availability
       const checkUserId = await pool.query(
-        "SELECT * FROM users WHERE email = $1",
+        "SELECT * FROM user WHERE email = $1",
         [email]
       );
       if (checkUserId.rowCount === 0) {
@@ -393,13 +393,13 @@ export async function updateUserAdmin(req, res) {
 
         // Update credentials based on user_id
         const updateUserAdmin = await pool.query(
-          "UPDATE users SET (fname, lname, email, password, company_name) = ($1, $2, $3, $4, $5) WHERE user_id= $6 RETURNING *",
+          "UPDATE user SET (fname, lname, email, password, company_name) = ($1, $2, $3, $4, $5) WHERE user_id= $6 RETURNING *",
           [fname, lname, email, encryptedPassword, company_name, user_id]
         );
 
         // Read back new data from user_id
         const updateUserAdminRead = await pool.query(
-          "SELECT * FROM users WHERE user_id = $1",
+          "SELECT * FROM user WHERE user_id = $1",
           [user_id]
         );
 
@@ -431,7 +431,7 @@ export async function updateUser(req, res) {
 
     // Check user id availability in token
     const checkUserId = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
+      "SELECT * FROM user WHERE user_id = $1",
       [user_id]
     );
     if (checkUserId.rowCount === 0) {
@@ -444,13 +444,13 @@ export async function updateUser(req, res) {
 
       // Update user with user_id specified in token
       const updateUser = await pool.query(
-        "UPDATE users SET (fname, lname, email, password) = ($1, $2, $3, $4) WHERE user_id= $5",
+        "UPDATE user SET (fname, lname, email, password) = ($1, $2, $3, $4) WHERE user_id= $5",
         [fname, lname, email, encryptedPassword, user_id]
       );
 
       // Read back new data from user_id
       const updateUserRead = await pool.query(
-        "SELECT * FROM users WHERE user_id = $1",
+        "SELECT * FROM user WHERE user_id = $1",
         [user_id]
       );
 
@@ -477,7 +477,7 @@ export async function deleteUserAdmin(req, res) {
     const authData = req.user;
     const admin_id = authData.admin_id;
     const checkAdminId = await pool.query(
-      "SELECT * FROM users WHERE admin_id=$1",
+      "SELECT * FROM user WHERE admin_id=$1",
       [admin_id]
     );
     if (checkAdminId.rowCount === 0) {
@@ -486,10 +486,9 @@ export async function deleteUserAdmin(req, res) {
       // Try to implement feature for not deleting other admin acoount or delete yourself
       const { email } = req.body;
       // Delete data from specified email
-      const deleteUser = await pool.query(
-        "DELETE FROM users WHERE email = $1",
-        [email]
-      );
+      const deleteUser = await pool.query("DELETE FROM user WHERE email = $1", [
+        email,
+      ]);
       if (deleteUser.rowCount === 0) {
         return res.status(404).json("Email not found");
       } else {
@@ -508,7 +507,7 @@ export async function deleteUser(req, res) {
     const authData = req.user;
     const user_id = authData.user_id;
     const checkUserID = await pool.query(
-      "SELECT * FROM users WHERE user_id=$1",
+      "SELECT * FROM user WHERE user_id=$1",
       [user_id]
     );
     if (checkUserID.rowCount === 0) {
@@ -526,7 +525,7 @@ export async function deleteUser(req, res) {
       } else {
         // Delete user from user_id token
         const deleteUser = await pool.query(
-          "DELETE FROM users WHERE user_id = $1",
+          "DELETE FROM user WHERE user_id = $1",
           [user_id]
         );
         res.json("User has been deleted");
