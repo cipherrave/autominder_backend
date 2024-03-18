@@ -20,7 +20,7 @@ export async function createService(req, res) {
         cost,
         service_name,
         place,
-        note,
+        notes,
         service_date,
         vehicle_id,
       } = req.body;
@@ -61,7 +61,7 @@ export async function createService(req, res) {
             cost: readNewService.rows[0].cost,
             service_name: readNewService.rows[0].service_name,
             place: readNewService.rows[0].place,
-            note: readNewService.rows[0].note,
+            notes: readNewService.rows[0].notes,
             service_date: readNewService.rows[0].service_date,
             vehicle_id: readNewService.rows[0].vehicle_id,
           },
