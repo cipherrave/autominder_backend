@@ -7,7 +7,8 @@ export async function createVehicle(req, res) {
     // Read user_id from token
     const authData = req.user;
     const user_id = authData.user_id;
-    const { vname, reg_num, brand, model, purchase_year, mileage } = req.body;
+    const { vname, reg_num, brand, model, purchase_year, mileage, notes } =
+      req.body;
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
       [user_id]
@@ -24,7 +25,7 @@ export async function createVehicle(req, res) {
       const vehicle_id = generatedID;
       // Insert details into vehicle table
       const newVehicle = await pool.query(
-        "INSERT INTO vehicle (vehicle_id, vname, reg_num, brand, model, purchase_year, mileage, user_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        "INSERT INTO vehicle (vehicle_id, vname, reg_num, brand, model, purchase_year, mileage, notes, user_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
         [
           vehicle_id,
           vname,
@@ -33,6 +34,7 @@ export async function createVehicle(req, res) {
           model,
           purchase_year,
           mileage,
+          notes,
           user_id,
         ]
       );
@@ -53,6 +55,7 @@ export async function createVehicle(req, res) {
           model: readNewVehicle.rows[0].model,
           purchase_year: readNewVehicle.rows[0].purchase_year,
           mileage: readNewVehicle.rows[0].mileage,
+          notes: readNewVehicle.rows[0].notes,
         },
       };
       res.json(apiResponse);
