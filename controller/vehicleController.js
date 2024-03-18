@@ -132,9 +132,7 @@ export async function getAllVehicle(req, res) {
         "SELECT * FROM vehicle WHERE user_id = $1",
         [user_id]
       );
-      if (allVehicle.rowCount === 0) {
-        return res.status(404).json("No vehicle with specified user_id");
-      }
+      return res.json(allVehicle.rows);
     }
   } catch (error) {
     res.status(500).json(error.message);
