@@ -272,15 +272,13 @@ export async function updateServiceUser(req, res) {
         place,
         note,
         service_date,
-        vehicle_id,
       } = req.body;
-    }
     if (!service_id) {
       return res.status(400).json("Insert service_id");
     } else {
       // Update links with user_id specified in token
       const updateService = await pool.query(
-        "UPDATE service SET (next_mileage, next_date, cost, service_name, place, note, service_date, vehicle_id,) = ($1, $2, $3, $4, $5, $6, $7, $8) WHERE service_id= $9",
+        "UPDATE service SET (next_mileage, next_date, cost, service_name, place, note, service_date) = ($1, $2, $3, $4, $5, $6, $7) WHERE service_id= $8",
         [
           next_mileage,
           next_date,
@@ -289,7 +287,6 @@ export async function updateServiceUser(req, res) {
           place,
           note,
           service_date,
-          vehicle_id,
           service_id,
         ]
       );
@@ -309,7 +306,7 @@ export async function updateServiceUser(req, res) {
         place: updateServiceRead.rows[0].place,
         note: updateServiceRead.rows[0].note,
         service_date: updateServiceRead.rows[0].service_date,
-        vehicle_id: updateServiceRead.rows[0].vehicle_id,
+        service_id: updateServiceRead.rows[0].service_id,
       };
 
       res.status(200).json(updatedServiceData);
