@@ -205,6 +205,8 @@ export async function updateVehicleUser(req, res) {
     // Read data from token
     const authData = req.user;
     const user_id = authData.user_id;
+    const { vname, reg_num, brand, model, purchase_year, mileage, notes } =
+      req.body;
 
     // Check user id availability in token
     const checkUserId = await pool.query(
@@ -214,44 +216,41 @@ export async function updateVehicleUser(req, res) {
     if (checkUserId.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      const { vname, reg_num, brand, model, purchase_year, mileage, notes } =
-        req.body;
-
       // Check reg_num availability in database
       const checkRegNum = await pool.query(
         "SELECT * FROM vehicle WHERE reg_num = $1",
         [reg_num]
       );
-    }
-    if (checkRegNum.rowCount === 0) {
-      return res.status(404).json("Vehicle not exist");
-    } else {
-      // Update vehicles with user_id specified in token
-      const updateVehicle = await pool.query(
-        "UPDATE vehicle SET (vname, brand, model, purchase_year, mileage, notes) = ($1, $2, $3, $4, $5, $6) WHERE (reg_num, user_id)= ($7, $8)",
-        [vname, brand, model, purchase_year, mileage, notes, reg_num, user_id]
-      );
+      if (checkRegNum.rowCount === 0) {
+        return res.status(404).json("Vehicle not exist");
+      } else {
+        // Update vehicles with user_id specified in token
+        const updateVehicle = await pool.query(
+          "UPDATE vehicle SET (vname, brand, model, purchase_year, mileage, notes) = ($1, $2, $3, $4, $5, $6) WHERE (reg_num, user_id)= ($7, $8)",
+          [vname, brand, model, purchase_year, mileage, notes, reg_num, user_id]
+        );
 
-      // Read back new data from user_id
-      const updateVehicleRead = await pool.query(
-        "SELECT * FROM vehicle WHERE reg_num = $1",
-        [reg_num]
-      );
+        // Read back new data from user_id
+        const updateVehicleRead = await pool.query(
+          "SELECT * FROM vehicle WHERE reg_num = $1",
+          [reg_num]
+        );
 
-      const updatedVehicleData = {
-        message: "vehicle data has been updated",
-        vname: updateVehicleRead.rows[0].vname,
-        reg_num: updateVehicleRead.rows[0].reg_num,
-        brand: updateVehicleRead.rows[0].brand,
-        model: updateVehicleRead.rows[0].moddel,
-        purchase_year: updateVehicleRead.rows[0].purchase_year,
-        mileage: updateVehicleRead.rows[0].mileage,
-        vehicle_id: updateVehicleRead.rows[0].vehicle_id,
-        notes: updateVehicleRead.rows[0].notes,
-        user_id: updateVehicleRead.rows[0].user_id,
-      };
+        const updatedVehicleData = {
+          message: "vehicle data has been updated",
+          vname: updateVehicleRead.rows[0].vname,
+          reg_num: updateVehicleRead.rows[0].reg_num,
+          brand: updateVehicleRead.rows[0].brand,
+          model: updateVehicleRead.rows[0].moddel,
+          purchase_year: updateVehicleRead.rows[0].purchase_year,
+          mileage: updateVehicleRead.rows[0].mileage,
+          vehicle_id: updateVehicleRead.rows[0].vehicle_id,
+          notes: updateVehicleRead.rows[0].notes,
+          user_id: updateVehicleRead.rows[0].user_id,
+        };
 
-      res.status(200).json(updatedVehicleData);
+        res.status(200).json(updatedVehicleData);
+      }
     }
   } catch (error) {
     res.status(500).json(error.message);
