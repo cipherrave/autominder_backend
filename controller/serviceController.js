@@ -24,50 +24,50 @@ export async function createService(req, res) {
         service_date,
         vehicle_id,
       } = req.body;
-    }
-    if (!vehicle_id) {
-      return res.status(400).json("Missing vehicle_id");
-    } else {
-      // Generate service_id using nanoid
-      let generatedID = nanoid();
-      const service_id = generatedID;
-      // Insert details into service table
-      const newService = await pool.query(
-        "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, note, service_date, vehicle_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-        [
-          service_id,
-          next_mileage,
-          next_date,
-          cost,
-          service_name,
-          place,
-          note,
-          service_date,
-          vehicle_id,
-        ]
-      );
+      if (!vehicle_id) {
+        return res.status(400).json("Missing vehicle_id");
+      } else {
+        // Generate service_id using nanoid
+        let generatedID = nanoid();
+        const service_id = generatedID;
+        // Insert details into service table
+        const newService = await pool.query(
+          "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, note, service_date, vehicle_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+          [
+            service_id,
+            next_mileage,
+            next_date,
+            cost,
+            service_name,
+            place,
+            note,
+            service_date,
+            vehicle_id,
+          ]
+        );
 
-      const readNewService = await pool.query(
-        "SELECT * FROM service WHERE service_id=$1",
-        [service_id]
-      );
+        const readNewService = await pool.query(
+          "SELECT * FROM service WHERE service_id=$1",
+          [service_id]
+        );
 
-      // Generate response
-      const apiResponse = {
-        message: "A new service entry is made",
-        data: {
-          service_id: readNewService.rows[0].service_id,
-          next_mileage: readNewService.rows[0].next_mileage,
-          next_date: readNewService.rows[0].next_date,
-          cost: readNewService.rows[0].cost,
-          service_name: readNewService.rows[0].service_name,
-          place: readNewService.rows[0].place,
-          note: readNewService.rows[0].note,
-          service_date: readNewService.rows[0].service_date,
-          vehicle_id: readNewService.rows[0].vehicle_id,
-        },
-      };
-      res.json(apiResponse);
+        // Generate response
+        const apiResponse = {
+          message: "A new service entry is made",
+          data: {
+            service_id: readNewService.rows[0].service_id,
+            next_mileage: readNewService.rows[0].next_mileage,
+            next_date: readNewService.rows[0].next_date,
+            cost: readNewService.rows[0].cost,
+            service_name: readNewService.rows[0].service_name,
+            place: readNewService.rows[0].place,
+            note: readNewService.rows[0].note,
+            service_date: readNewService.rows[0].service_date,
+            vehicle_id: readNewService.rows[0].vehicle_id,
+          },
+        };
+        res.json(apiResponse);
+      }
     }
   } catch (error) {
     res.status(500).json(error.message);
