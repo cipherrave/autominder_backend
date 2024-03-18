@@ -158,9 +158,10 @@ export async function getAllService(req, res) {
       return res.status(404).json("User id not found.");
     } else {
       // List all service in service table where the user_id is same as in token
+      const { vehicle_id } = req.body;
       const allService = await pool.query(
-        "SELECT * FROM service WHERE user_id = $1",
-        [user_id]
+        "SELECT * FROM service WHERE vehicle_id = $1",
+        [vehicle_id]
       );
       return res.json(allService.rows);
     }
