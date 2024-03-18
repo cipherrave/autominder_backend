@@ -29,7 +29,6 @@ import {
 import cors from "cors";
 import {
   createService,
-  deleteOneService,
   deleteOneServiceAdmin,
   deleteServiceUser,
   getAllService,
