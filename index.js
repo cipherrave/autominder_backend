@@ -25,6 +25,7 @@ import {
   getOneVehicleAdmin,
   updateVehicleUser,
 } from "./controller/vehicleController.js";
+import cors from "cors";
 
 const app = express();
 //import links
@@ -36,6 +37,7 @@ const port = process.env.PORT;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
+app.use(cors());
 
 //INITIALIZE DATABASE
 dbInit();
