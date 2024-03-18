@@ -1,7 +1,5 @@
 import pool from "../database/connection.js";
 import { nanoid } from "nanoid";
-import fs from "fs";
-import fastcsv from "fast-csv";
 
 //Create a vehicle
 export async function createVehicle(req, res) {
@@ -9,6 +7,7 @@ export async function createVehicle(req, res) {
     // Read user_id from token
     const authData = req.user;
     const user_id = authData.user_id;
+    const { vname, reg_num, brand, model, purchase_year, mileage } = req.body;
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
       [user_id]
@@ -16,7 +15,6 @@ export async function createVehicle(req, res) {
     if (checkUserID.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      const { vname, reg_num, brand, model, purchase_year, mileage } = req.body;
     }
     if (!vname || !reg_num || !brand || !model || !mileage) {
       return res.status(400).json("Missing required fields");
@@ -70,8 +68,6 @@ export async function getAllVehicleAdmin(req, res) {
     // Read admin_id data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("all_vehicles_admin.csv");
 
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
@@ -79,25 +75,6 @@ export async function getAllVehicleAdmin(req, res) {
     );
     if (checkAdminID.rowCount === 0) {
       return res.status(404).json("Admin id not found. Not authorized!");
-    } else {
-      // List all vehicles in vehicles table regardless of user
-      const allVehicle = await pool.query("SELECT * FROM vehicle");
-
-      // Generate CSV file
-      if (generateCSV === false) {
-        console.log("CSV not generated.");
-        return res.json(allVehicle.rows);
-      } else if (generateCSV === true) {
-        const jsonData = JSON.parse(JSON.stringify(allVehicle.rows));
-
-        fastcsv.write(jsonData, { headers: true }).pipe(ws);
-        console.log("all_vehicles_admin.csv generated");
-        return res.json(allVehicle.rows);
-      } else {
-        return res.json(
-          "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-        );
-      }
     }
   } catch (error) {
     res.status(500).json(error.message);
@@ -111,8 +88,6 @@ export async function getAllVehicleOneUserAdmin(req, res) {
     const authData = req.user;
     const admin_id = authData.admin_id;
     const { email } = req.body;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("all_vehicle_one_user_admin.csv");
 
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
@@ -129,21 +104,6 @@ export async function getAllVehicleOneUserAdmin(req, res) {
       if (allVehicle.rowCount === 0) {
         return res.status(404).json("No vehicle with specified email");
       }
-      // Generate CSV file
-      if (generateCSV === false) {
-        console.log("CSV not generated.");
-        return res.json(allVehicle.rows);
-      } else if (generateCSV === true) {
-        const jsonData = JSON.parse(JSON.stringify(allVehicle.rows));
-
-        fastcsv.write(jsonData, { headers: true }).pipe(ws);
-        console.log("all_vehicle_one_user_admin.csv generated");
-        return res.json(allVehicle.rows);
-      } else {
-        return res.json(
-          "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-        );
-      }
     }
   } catch (error) {
     res.status(500).json(error.message);
@@ -156,8 +116,6 @@ export async function getAllVehicle(req, res) {
     // Read user_id data from token
     const authData = req.user;
     const user_id = authData.user_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("all_your_vehicle_user.csv");
 
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
@@ -173,22 +131,6 @@ export async function getAllVehicle(req, res) {
       );
       if (allVehicle.rowCount === 0) {
         return res.status(404).json("No vehicle with specified user_id");
-      } else {
-        // Generate CSV file
-        if (generateCSV === false) {
-          console.log("CSV not generated.");
-          return res.json(allVehicle.rows);
-        } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(allVehicle.rows));
-
-          fastcsv.write(jsonData, { headers: true }).pipe(ws);
-          console.log("all_your_vehicles_user.csv generated");
-          return res.json(allVehicle.rows);
-        } else {
-          return res.json(
-            "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-          );
-        }
       }
     }
   } catch (error) {
@@ -202,8 +144,6 @@ export async function getOneVehicleAdmin(req, res) {
     // Read admin_id from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("one_vehicle_admin.csv");
 
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
@@ -219,22 +159,6 @@ export async function getOneVehicleAdmin(req, res) {
       );
       if (oneVehicle.rowCount === 0) {
         return res.status(404).json("No vehicle with specified vehicle_id");
-      } else {
-        // Generate CSV file
-        if (generateCSV === false) {
-          console.log("CSV not generated.");
-          return res.json(oneVehicle.rows);
-        } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(oneVehicle.rows));
-
-          fastcsv.write(jsonData, { headers: true }).pipe(ws);
-          console.log("one_vehicle_admin.csv generated");
-          return res.json(oneVehicle.rows);
-        } else {
-          return res.json(
-            "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-          );
-        }
       }
     }
   } catch (error) {
@@ -248,8 +172,6 @@ export async function getOneVehicle(req, res) {
     // Read user_id data from token
     const authData = req.user;
     const user_id = authData.user_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("one_vehicle_user.csv");
 
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
@@ -265,22 +187,6 @@ export async function getOneVehicle(req, res) {
       );
       if (oneVehicle.rowCount === 0) {
         return res.status(404).json("No vehicle with specified vehicle_id");
-      } else {
-        // Generate CSV file
-        if (generateCSV === false) {
-          console.log("CSV not generated.");
-          return res.json(oneVehicle.rows);
-        } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(oneVehicle.rows));
-
-          fastcsv.write(jsonData, { headers: true }).pipe(ws);
-          console.log("one_vehicle_user.csv generated");
-          return res.json(oneVehicle.rows);
-        } else {
-          return res.json(
-            "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-          );
-        }
       }
     }
   } catch (error) {
