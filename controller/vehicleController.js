@@ -218,11 +218,11 @@ export async function updateVehicleUser(req, res) {
     } else {
       // Check reg_num availability in database
       const checkRegNum = await pool.query(
-        "SELECT * FROM vehicle WHERE reg_num = $1",
-        [reg_num]
+        "SELECT * FROM vehicle WHERE (reg_num, user_id) = ($1,$2)",
+        [reg_num, user_id]
       );
       if (checkRegNum.rowCount === 0) {
-        return res.status(404).json("Vehicle not exist");
+        return res.status(404).json("Vehicle does not exist");
       } else {
         // Update vehicles with user_id specified in token
         const updateVehicle = await pool.query(
