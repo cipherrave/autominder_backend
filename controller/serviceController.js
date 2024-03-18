@@ -32,7 +32,7 @@ export async function createService(req, res) {
         const service_id = generatedID;
         // Insert details into service table
         const newService = await pool.query(
-          "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, note, service_date, vehicle_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+          "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, notes, service_date, vehicle_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
           [
             service_id,
             next_mileage,
@@ -40,7 +40,7 @@ export async function createService(req, res) {
             cost,
             service_name,
             place,
-            note,
+            notes,
             service_date,
             vehicle_id,
           ]
