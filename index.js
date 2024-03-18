@@ -65,12 +65,10 @@ app.get("/health", healthCheck);
 app.get("/validate/:validation_key", validateAccount);
 
 // Admin Routes
-app.get("/admin/users/", isAuth, getOneUserAdmin);
-app.get("/admin/users/all", isAuth, getAllUserAdmin);
+app.get("/admin/user/", isAuth, getOneUserAdmin);
+app.get("/admin/user/all", isAuth, getAllUserAdmin);
 app.put("/admin/updateUser", isAuth, updateUserAdmin);
 app.delete("/admin/deleteUser", isAuth, deleteUserAdmin);
-
-// Business Owner Routes
 
 // User Routes
 app.post("/register", createUser);

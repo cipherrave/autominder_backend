@@ -80,7 +80,6 @@ export async function getAllServiceAdmin(req, res) {
     // Read admin_id data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
       [admin_id]
@@ -104,8 +103,6 @@ export async function getAllserviceOneUserAdmin(req, res) {
     const authData = req.user;
     const admin_id = authData.admin_id;
     const { email } = req.body;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("all_service_one_user_admin.csv");
 
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
@@ -121,21 +118,8 @@ export async function getAllserviceOneUserAdmin(req, res) {
       );
       if (allService.rowCount === 0) {
         return res.status(404).json("No service with specified email");
-      }
-      // Generate CSV file
-      if (generateCSV === false) {
-        console.log("CSV not generated.");
-        return res.json(allService.rows);
-      } else if (generateCSV === true) {
-        const jsonData = JSON.parse(JSON.stringify(allService.rows));
-
-        fastcsv.write(jsonData, { headers: true }).pipe(ws);
-        console.log("all_service_one_user_admin.csv generated");
-        return res.json(allService.rows);
       } else {
-        return res.json(
-          "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-        );
+        return res.json(allService.rows);
       }
     }
   } catch (error) {
@@ -176,8 +160,6 @@ export async function getOneServiceAdmin(req, res) {
     // Read admin_id from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("one_service_admin.csv");
 
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
@@ -193,23 +175,9 @@ export async function getOneServiceAdmin(req, res) {
         [service_id]
       );
       if (oneService.rowCount === 0) {
-        return res.status(404).json("No service with specified service_id");
+        return res.status(404).json("No service with specified service id");
       } else {
-        // Generate CSV file
-        if (generateCSV === false) {
-          console.log("CSV not generated.");
-          return res.json(oneService.rows);
-        } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(oneService.rows));
-
-          fastcsv.write(jsonData, { headers: true }).pipe(ws);
-          console.log("one_link_admin.csv generated");
-          return res.json(oneService.rows);
-        } else {
-          return res.json(
-            "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-          );
-        }
+        return res.json(oneService.rows);
       }
     }
   } catch (error) {

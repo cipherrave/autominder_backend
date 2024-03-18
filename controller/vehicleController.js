@@ -71,14 +71,16 @@ export async function getAllVehicleAdmin(req, res) {
     // Read admin_id data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
       [admin_id]
     );
     if (checkAdminID.rowCount === 0) {
       return res.status(404).json("Admin id not found. Not authorized!");
-    }
+    } else {
+    } // List all vehicles in vehicle table regardless of user
+    const allVehicle = await pool.query("SELECT * FROM vehicle");
+    return res.json(allVehicle.rows);
   } catch (error) {
     res.status(500).json(error.message);
   }
@@ -106,6 +108,8 @@ export async function getAllVehicleOneUserAdmin(req, res) {
       );
       if (allVehicle.rowCount === 0) {
         return res.status(404).json("No vehicle with specified email");
+      } else {
+        return res.json(allVehicles.rows);
       }
     }
   } catch (error) {
@@ -159,7 +163,9 @@ export async function getOneVehicleAdmin(req, res) {
         [reg_num]
       );
       if (oneVehicle.rowCount === 0) {
-        return res.status(404).json("No vehicle with specified vehicle_id");
+        return res
+          .status(404)
+          .json("No vehicle with specified registration number");
       } else {
         return res.json(oneVehicle.rows);
       }
