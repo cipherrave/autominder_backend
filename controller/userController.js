@@ -337,6 +337,9 @@ export async function updateUser(req, res) {
     if (checkUserId.rowCount === 0) {
       return res.status(404).json("User not found.");
     } else {
+      // Read data from token
+      const authData = req.users;
+      const user_id = authData.user_id;
       const { fname, lname, password, company_name } = req.body;
       // Generate password hash
       const salt = await bcrypt.genSalt(10);
@@ -412,7 +415,7 @@ export async function deleteUser(req, res) {
       [user_id]
     );
     if (checkUserID.rowCount === 0) {
-      return res.status(404).json("users id not found.");
+      return res.status(404).json("user id not found.");
     } else {
       // Enter own password to confirm account deletion
       const { password } = req.body;
