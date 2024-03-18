@@ -160,6 +160,8 @@ export async function getOneVehicleAdmin(req, res) {
       );
       if (oneVehicle.rowCount === 0) {
         return res.status(404).json("No vehicle with specified vehicle_id");
+      } else {
+        return res.json(oneVehicle.rows);
       }
     }
   } catch (error) {
@@ -188,6 +190,8 @@ export async function getOneVehicle(req, res) {
       );
       if (oneVehicle.rowCount === 0) {
         return res.status(404).json("No vehicle with specified vehicle_id");
+      } else {
+        return res.json(oneVehicle.rows);
       }
     }
   } catch (error) {
