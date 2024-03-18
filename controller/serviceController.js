@@ -273,43 +273,44 @@ export async function updateServiceUser(req, res) {
         note,
         service_date,
       } = req.body;
-    if (!service_id) {
-      return res.status(400).json("Insert service_id");
-    } else {
-      // Update links with user_id specified in token
-      const updateService = await pool.query(
-        "UPDATE service SET (next_mileage, next_date, cost, service_name, place, note, service_date) = ($1, $2, $3, $4, $5, $6, $7) WHERE service_id= $8",
-        [
-          next_mileage,
-          next_date,
-          cost,
-          service_name,
-          place,
-          note,
-          service_date,
-          service_id,
-        ]
-      );
+      if (!service_id) {
+        return res.status(400).json("Insert service_id");
+      } else {
+        // Update links with user_id specified in token
+        const updateService = await pool.query(
+          "UPDATE service SET (next_mileage, next_date, cost, service_name, place, note, service_date) = ($1, $2, $3, $4, $5, $6, $7) WHERE service_id= $8",
+          [
+            next_mileage,
+            next_date,
+            cost,
+            service_name,
+            place,
+            note,
+            service_date,
+            service_id,
+          ]
+        );
 
-      // Read back new data from user_id
-      const updateServiceRead = await pool.query(
-        "SELECT * FROM service WHERE service_id = $1",
-        [service_id]
-      );
+        // Read back new data from user_id
+        const updateServiceRead = await pool.query(
+          "SELECT * FROM service WHERE service_id = $1",
+          [service_id]
+        );
 
-      const updatedServiceData = {
-        service_id: updateServiceRead.rows[0].service_id,
-        next_mileage: updateServiceRead.rows[0].next_mileage,
-        next_date: updateServiceRead.rows[0].next_date,
-        cost: updateServiceRead.rows[0].cost,
-        service_name: updateServiceRead.rows[0].service_name,
-        place: updateServiceRead.rows[0].place,
-        note: updateServiceRead.rows[0].note,
-        service_date: updateServiceRead.rows[0].service_date,
-        service_id: updateServiceRead.rows[0].service_id,
-      };
+        const updatedServiceData = {
+          service_id: updateServiceRead.rows[0].service_id,
+          next_mileage: updateServiceRead.rows[0].next_mileage,
+          next_date: updateServiceRead.rows[0].next_date,
+          cost: updateServiceRead.rows[0].cost,
+          service_name: updateServiceRead.rows[0].service_name,
+          place: updateServiceRead.rows[0].place,
+          note: updateServiceRead.rows[0].note,
+          service_date: updateServiceRead.rows[0].service_date,
+          service_id: updateServiceRead.rows[0].service_id,
+        };
 
-      res.status(200).json(updatedServiceData);
+        res.status(200).json(updatedServiceData);
+      }
     }
   } catch (error) {
     res.status(500).json(error.message);
