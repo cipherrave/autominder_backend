@@ -344,7 +344,7 @@ export async function updateUser(req, res) {
 
       // Update users with user_id specified in token
       const updateUser = await pool.query(
-        "UPDATE users SET (fname, lname, password, company_name) = ($1, $2, $3, $4) WHERE user_id= $6",
+        "UPDATE users SET (fname, lname, password, company_name) = ($1, $2, $3, $4) WHERE user_id= $5",
         [fname, lname, encryptedPassword, company_name, user_id]
       );
 
