@@ -78,9 +78,10 @@ export async function getAllVehicleAdmin(req, res) {
     if (checkAdminID.rowCount === 0) {
       return res.status(404).json("Admin id not found. Not authorized!");
     } else {
-    } // List all vehicles in vehicle table regardless of user
-    const allVehicle = await pool.query("SELECT * FROM vehicle");
-    return res.json(allVehicle.rows);
+      // List all vehicles in vehicle table regardless of user
+      const allVehicle = await pool.query("SELECT * FROM vehicle");
+      return res.json(allVehicle.rows);
+    }
   } catch (error) {
     res.status(500).json(error.message);
   }
