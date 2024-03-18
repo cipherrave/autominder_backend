@@ -181,7 +181,7 @@ export async function loginUser(req, res) {
 export async function getOneUserAdmin(req, res) {
   try {
     // Read data from token
-    const authData = req.users;
+    const authData = req.user;
     const admin_id = authData.admin_id;
     const { generateCSV } = req.body;
     const ws = fs.createWriteStream("user_data_admin.csv");
@@ -227,7 +227,7 @@ export async function getOneUserAdmin(req, res) {
 export async function getAllUserAdmin(req, res) {
   try {
     // Read data from token
-    const authData = req.users;
+    const authData = req.user;
     const admin_id = authData.admin_id;
     const { generateCSV } = req.body;
     const ws = fs.createWriteStream("all_user_admin.csv");
@@ -267,7 +267,7 @@ export async function getAllUserAdmin(req, res) {
 export async function updateUserAdmin(req, res) {
   try {
     // Read data from token
-    const authData = req.users;
+    const authData = req.user;
     const admin_id = authData.admin_id;
 
     // Check admin id availability in token
@@ -326,7 +326,7 @@ export async function updateUserAdmin(req, res) {
 export async function updateUser(req, res) {
   try {
     // Read data from token
-    const authData = req.users;
+    const authData = req.user;
     const user_id = authData.user_id;
 
     // Check users id availability in token
@@ -341,9 +341,10 @@ export async function updateUser(req, res) {
       // Generate password hash
       const salt = await bcrypt.genSalt(10);
       const encryptedPassword = await bcrypt.hash(password, salt);
+
       // Update users with user_id specified in token
       const updateUser = await pool.query(
-        "UPDATE users SET (fname, lname, password, company_name) = ($1, $2, $3, $4) WHERE user_id=$5",
+        "UPDATE users SET (fname, lname, password, company_name) = ($1, $2, $3, $4) WHERE (user_id) = ($5)",
         [fname, lname, encryptedPassword, company_name, user_id]
       );
 
@@ -354,7 +355,7 @@ export async function updateUser(req, res) {
       );
 
       const apiResponse = {
-        message: "users data has been updated",
+        message: "User data has been updated",
         fname: updateUserRead.rows[0].fname,
         lname: updateUserRead.rows[0].lname,
         email: updateUserRead.rows[0].email,
@@ -404,7 +405,7 @@ export async function deleteUserAdmin(req, res) {
 export async function deleteUser(req, res) {
   try {
     // Read user_id from token
-    const authData = req.users;
+    const authData = req.user;
     const user_id = authData.user_id;
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
@@ -425,7 +426,7 @@ export async function deleteUser(req, res) {
       } else {
         // Delete users from user_id token
         const deleteUser = await pool.query(
-          "DELETE FROM users WHERE user_id = $1",
+          "DELETE FROM users WHERE user_id=$1",
           [user_id]
         );
         res.json("users has been deleted");
