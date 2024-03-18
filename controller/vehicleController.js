@@ -219,8 +219,8 @@ export async function updateVehicleUser(req, res) {
 
       // Update vehicles with user_id specified in token
       const updateVehicle = await pool.query(
-        "UPDATE vehicle SET (vname, brand, model, purchase_year, mileage, notes) = ($1, $2, $3, $4, $5, $6) WHERE reg_num= $7",
-        [vname, brand, model, purchase_year, mileage, notes, reg_num]
+        "UPDATE vehicle SET (vname, brand, model, purchase_year, mileage, notes) = ($1, $2, $3, $4, $5, $6) WHERE (reg_num, user_id)= ($7, $8)",
+        [vname, brand, model, purchase_year, mileage, notes, reg_num, user_id]
       );
 
       // Read back new data from user_id
@@ -239,6 +239,7 @@ export async function updateVehicleUser(req, res) {
         mileage: updateVehicleRead.rows[0].mileage,
         vehicle_id: updateVehicleRead.rows[0].vehicle_id,
         notes: updateVehicleRead.rows[0].notes,
+        user_id: updateVehicleRead.rows[0].user_id,
       };
 
       res.status(200).json(updatedVehicleData);
