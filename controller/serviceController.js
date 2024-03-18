@@ -357,10 +357,10 @@ export async function deleteServiceUser(req, res) {
     if (checkUserID.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      const { service_id, vehicle_id } = req.body;
+      const { service_id } = req.body;
       const deleteOneService = await pool.query(
-        "DELETE FROM service WHERE (service_id, vehicle_id) = ($1, $2)",
-        [service_id, vehicle_id]
+        "DELETE FROM service WHERE (service_id) = ($1)",
+        [service_id]
       );
       if (deleteOneService.rowCount === 0) {
         return res
