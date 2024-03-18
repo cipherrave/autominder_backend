@@ -177,15 +177,12 @@ export async function loginUser(req, res) {
   }
 }
 
-// Get one users - ADMIN
+// Get one user - ADMIN
 export async function getOneUserAdmin(req, res) {
   try {
     // Read data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("user_data_admin.csv");
-
     // Check admin id availability in token
     const checkAdminId = await pool.query(
       "SELECT * FROM users WHERE admin_id = $1",
@@ -202,20 +199,7 @@ export async function getOneUserAdmin(req, res) {
       if (oneUser.rowCount === 0) {
         return res.status(401).json("users account not found");
       } else {
-        if (generateCSV === false) {
-          console.log("CSV not generated.");
-          return res.json(oneUser.rows);
-        } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(oneUser.rows));
-
-          fastcsv.write(jsonData, { headers: true }).pipe(ws);
-          console.log("user_data_admin.csv generated");
-          return res.json(oneUser.rows);
-        } else {
-          return res.json(
-            "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-          );
-        }
+        return res.json(oneUser.rows);
       }
     }
   } catch (error) {
@@ -229,8 +213,6 @@ export async function getAllUserAdmin(req, res) {
     // Read data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("all_user_admin.csv");
 
     // Check admin id availability in token
     const checkAdminId = await pool.query(
@@ -242,21 +224,7 @@ export async function getAllUserAdmin(req, res) {
     } else {
       // Query to list all users in database
       const alluser = await pool.query("SELECT * FROM users");
-
-      if (generateCSV === false) {
-        console.log("CSV not generated.");
-        return res.json(alluser.rows);
-      } else if (generateCSV === true) {
-        const jsonData = JSON.parse(JSON.stringify(alluser.rows));
-
-        fastcsv.write(jsonData, { headers: true }).pipe(ws);
-        console.log("all_user_admin.csv generated");
-        return res.json(alluser.rows);
-      } else {
-        return res.json(
-          "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-        );
-      }
+      return res.json(alluser.rows);
     }
   } catch (error) {
     res.status(500).json(error.message);
@@ -278,33 +246,33 @@ export async function updateUserAdmin(req, res) {
     if (checkAdminId.rowCount === 0) {
       return res.status(404).json("Admin id not found. Not Authorized!");
     } else {
-      const { fname, lname, email, password, user_id, company_name } = req.body;
+      const { fname, lname, email, password, company_name } = req.body;
       // check user_id availability
       const checkUserId = await pool.query(
         "SELECT * FROM users WHERE email = $1",
         [email]
       );
       if (checkUserId.rowCount === 0) {
-        return res.status(404).json("User_id not found.");
+        return res.status(404).json("User not found.");
       } else {
         // Generate password hash
         const salt = await bcrypt.genSalt(10);
         const encryptedPassword = await bcrypt.hash(password, salt);
 
-        // Update credentials based on user_id
+        // Update credentials based on email
         const updateUserAdmin = await pool.query(
-          "UPDATE users SET (fname, lname, email, password, company_name) = ($1, $2, $3, $4, $5) WHERE user_id= $6 RETURNING *",
-          [fname, lname, email, encryptedPassword, company_name, user_id]
+          "UPDATE users SET (fname, lname, password, company_name) = ($1, $2, $3, $4) WHERE (email) = ($5)",
+          [fname, lname, encryptedPassword, company_name, email]
         );
 
         // Read back new data from user_id
         const updateUserAdminRead = await pool.query(
-          "SELECT * FROM users WHERE user_id = $1",
-          [user_id]
+          "SELECT * FROM users WHERE email = $1",
+          [email]
         );
 
         const newUserData = {
-          message: "users data has been updated",
+          message: "User data has been updated",
           user_id: updateUserAdminRead.rows[0].user_id,
           fname: updateUserAdminRead.rows[0].fname,
           lname: updateUserAdminRead.rows[0].lname,
@@ -383,7 +351,6 @@ export async function deleteUserAdmin(req, res) {
     if (checkAdminId.rowCount === 0) {
       return res.status(404).json("Admin id not found. Not Authorized!");
     } else {
-      // Try to implement feature for not deleting other admin acoount or delete yourself
       const { email } = req.body;
       // Delete data from specified email
       const deleteUser = await pool.query(
@@ -393,7 +360,7 @@ export async function deleteUserAdmin(req, res) {
       if (deleteUser.rowCount === 0) {
         return res.status(404).json("Email not found");
       } else {
-        res.json("users has been deleted");
+        res.json("User has been deleted");
       }
     }
   } catch (error) {
