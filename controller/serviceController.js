@@ -1,7 +1,5 @@
 import pool from "../database/connection.js";
 import { nanoid } from "nanoid";
-import fs from "fs";
-import fastcsv from "fast-csv";
 
 //Create a service
 export async function createService(req, res) {
@@ -82,8 +80,6 @@ export async function getAllServiceAdmin(req, res) {
     // Read admin_id data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("all_links_admin.csv");
 
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
@@ -93,23 +89,8 @@ export async function getAllServiceAdmin(req, res) {
       return res.status(404).json("Admin id not found. Not authorized!");
     } else {
       // List all services in links table regardless of user
-      const allservice = await pool.query("SELECT * FROM service");
-
-      // Generate CSV file
-      if (generateCSV === false) {
-        console.log("CSV not generated.");
-        return res.json(allservice.rows);
-      } else if (generateCSV === true) {
-        const jsonData = JSON.parse(JSON.stringify(allservice.rows));
-
-        fastcsv.write(jsonData, { headers: true }).pipe(ws);
-        console.log("all_links_admin.csv generated");
-        return res.json(allservice.rows);
-      } else {
-        return res.json(
-          "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-        );
-      }
+      const allService = await pool.query("SELECT * FROM service");
+      return res.json(allService.rows);
     }
   } catch (error) {
     res.status(500).json(error.message);
@@ -168,8 +149,6 @@ export async function getAllService(req, res) {
     // Read user_id data from token
     const authData = req.user;
     const user_id = authData.user_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("all_your_Service_user.csv");
 
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
@@ -183,25 +162,7 @@ export async function getAllService(req, res) {
         "SELECT * FROM service WHERE user_id = $1",
         [user_id]
       );
-      if (allService.rowCount === 0) {
-        return res.status(404).json("No service with specified user_id");
-      } else {
-        // Generate CSV file
-        if (generateCSV === false) {
-          console.log("CSV not generated.");
-          return res.json(allService.rows);
-        } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(allService.rows));
-
-          fastcsv.write(jsonData, { headers: true }).pipe(ws);
-          console.log("all_your_services_user.csv generated");
-          return res.json(allService.rows);
-        } else {
-          return res.json(
-            "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-          );
-        }
-      }
+      return res.json(allService.rows);
     }
   } catch (error) {
     res.status(500).json(error.message);
@@ -261,8 +222,6 @@ export async function getOneService(req, res) {
     // Read user_id data from token
     const authData = req.user;
     const user_id = authData.user_id;
-    const { generateCSV } = req.body;
-    const ws = fs.createWriteStream("one_service_user.csv");
 
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
@@ -272,29 +231,15 @@ export async function getOneService(req, res) {
       return res.status(404).json("User id not found.");
     } else {
       // Get data from service_id
-      const { service_id } = req.body;
+      const { service_id, vehicle_id } = req.body;
       const oneService = await pool.query(
-        "SELECT * FROM service WHERE (service_id)  = $1",
-        [service_id]
+        "SELECT * FROM service WHERE (service_id, vehicle_id)  = ($1, $2)",
+        [service_id, vehicle_id]
       );
       if (oneService.rowCount === 0) {
         return res.status(404).json("No service with specified service_id");
       } else {
-        // Generate CSV file
-        if (generateCSV === false) {
-          console.log("CSV not generated.");
-          return res.json(oneService.rows);
-        } else if (generateCSV === true) {
-          const jsonData = JSON.parse(JSON.stringify(oneService.rows));
-
-          fastcsv.write(jsonData, { headers: true }).pipe(ws);
-          console.log("one_service_user.csv generated");
-          return res.json(oneService.rows);
-        } else {
-          return res.json(
-            "Do you want to generate CSV file as a report? Type false or true without the quotation mark"
-          );
-        }
+        return res.json(oneService.rows);
       }
     }
   } catch (error) {
@@ -402,7 +347,7 @@ export async function deleteOneServiceAdmin(req, res) {
 }
 
 // Delete a service - USER
-export async function deleteOneService(req, res) {
+export async function deleteServiceUser(req, res) {
   try {
     const authData = req.user;
     const user_id = authData.user_id;

@@ -429,7 +429,7 @@ export async function deleteUser(req, res) {
           "DELETE FROM users WHERE user_id=$1",
           [user_id]
         );
-        res.json("users has been deleted");
+        res.json("user has been deleted");
       }
     }
   } catch (error) {

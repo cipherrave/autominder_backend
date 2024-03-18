@@ -25,7 +25,20 @@ import {
   getOneVehicleAdmin,
   updateVehicleUser,
 } from "./controller/vehicleController.js";
+
 import cors from "cors";
+import {
+  createService,
+  deleteOneService,
+  deleteOneServiceAdmin,
+  deleteServiceUser,
+  getAllService,
+  getAllServiceAdmin,
+  getAllserviceOneUserAdmin,
+  getOneService,
+  getOneServiceAdmin,
+  updateServiceUser,
+} from "./controller/serviceController.js";
 
 const app = express();
 //import links
@@ -78,6 +91,19 @@ app.get("/user/vehicle", isAuth, getOneVehicle);
 app.get("/user/vehicle/all", isAuth, getAllVehicle);
 app.put("/user/vehicle/update", isAuth, updateVehicleUser);
 app.delete("/user/vehicle/delete", isAuth, deleteVehicleUser);
+
+// Admin Service Routes
+app.get("/admin/service", isAuth, getOneServiceAdmin);
+app.get("/admin/service/all", isAuth, getAllServiceAdmin);
+app.post("/admin/service/user/all", isAuth, getAllserviceOneUserAdmin);
+app.delete("/admin/service/delete", isAuth, deleteOneServiceAdmin);
+
+// User Service Routes
+app.post("/service/create", isAuth, createService);
+app.get("/user/service", isAuth, getOneService);
+app.get("/user/service/all", isAuth, getAllService);
+app.put("/user/service/update", isAuth, updateServiceUser);
+app.delete("/user/service/delete", isAuth, deleteServiceUser);
 
 //PORT
 app.listen(port, () => {
