@@ -7,6 +7,8 @@ export async function createVehicle(req, res) {
     // Read user_id from token
     const authData = req.user;
     const user_id = authData.user_id;
+    const { vname, reg_num, brand, model, purchase_year, mileage, notes } =
+      req.body;
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
       [user_id]
@@ -14,8 +16,6 @@ export async function createVehicle(req, res) {
     if (checkUserID.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      const { vname, reg_num, brand, model, purchase_year, mileage, notes } =
-        req.body;
     }
     if (!vname || !reg_num || !brand || !model || !mileage) {
       return res.status(400).json("Missing required fields");

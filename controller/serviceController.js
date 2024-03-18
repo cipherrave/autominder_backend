@@ -7,6 +7,16 @@ export async function createService(req, res) {
     // Read user_id from token
     const authData = req.user;
     const user_id = authData.user_id;
+    const {
+      next_mileage,
+      next_date,
+      cost,
+      service_name,
+      place,
+      notes,
+      service_date,
+      vehicle_id,
+    } = req.body;
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
       [user_id]
@@ -14,16 +24,6 @@ export async function createService(req, res) {
     if (checkUserID.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      const {
-        next_mileage,
-        next_date,
-        cost,
-        service_name,
-        place,
-        notes,
-        service_date,
-        vehicle_id,
-      } = req.body;
       if (!vehicle_id) {
         return res.status(400).json("Missing vehicle_id");
       } else {
