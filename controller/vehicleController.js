@@ -217,6 +217,15 @@ export async function updateVehicleUser(req, res) {
       const { vname, reg_num, brand, model, purchase_year, mileage, notes } =
         req.body;
 
+      // Check reg_num availability in database
+      const checkRegNum = await pool.query(
+        "SELECT * FROM vehicle WHERE reg_num = $1",
+        [reg_num]
+      );
+    }
+    if (checkRegNum.rowCount === 0) {
+      return res.status(404).json("Vehicle not exist");
+    } else {
       // Update vehicles with user_id specified in token
       const updateVehicle = await pool.query(
         "UPDATE vehicle SET (vname, brand, model, purchase_year, mileage, notes) = ($1, $2, $3, $4, $5, $6) WHERE (reg_num, user_id)= ($7, $8)",
