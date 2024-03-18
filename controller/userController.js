@@ -354,7 +354,7 @@ export async function updateUser(req, res) {
         [user_id]
       );
 
-      const newUserData = {
+      const apiResponse = {
         message: "users data has been updated",
         user_id: updateUserRead.rows[0].user_id,
         fname: updateUserRead.rows[0].fname,
@@ -364,7 +364,7 @@ export async function updateUser(req, res) {
         company_name: updateUserRead.rows[0].company_name,
       };
 
-      res.status(200).json(newUserData);
+      res.status(200).json(apiResponse);
     }
   } catch (error) {
     res.status(500).json(error.message);
