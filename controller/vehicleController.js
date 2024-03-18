@@ -214,12 +214,13 @@ export async function updateVehicleUser(req, res) {
     if (checkUserId.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      const { vname, reg_num, brand, model, purchase_year, mileage } = req.body;
+      const { vname, reg_num, brand, model, purchase_year, mileage, notes } =
+        req.body;
 
       // Update vehicles with user_id specified in token
       const updateVehicle = await pool.query(
-        "UPDATE vehicle SET (vname, brand, model, purchase_year, mileage) = ($1, $2, $3, $4, $5) WHERE reg_num= $6",
-        [vname, brand, model, purchase_year, mileage, reg_num]
+        "UPDATE vehicle SET (vname, brand, model, purchase_year, mileage, notes) = ($1, $2, $3, $4, $5, $6) WHERE reg_num= $7",
+        [vname, brand, model, purchase_year, mileage, notes, reg_num]
       );
 
       // Read back new data from user_id
@@ -237,6 +238,7 @@ export async function updateVehicleUser(req, res) {
         purchase_year: updateVehicleRead.rows[0].purchase_year,
         mileage: updateVehicleRead.rows[0].mileage,
         vehicle_id: updateVehicleRead.rows[0].vehicle_id,
+        notes: updateVehicleRead.rows[0].notes,
       };
 
       res.status(200).json(updatedVehicleData);
