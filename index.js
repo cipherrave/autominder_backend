@@ -73,11 +73,11 @@ app.post("/admin/vehicle/user/all", isAuth, getAllVehicleOneUserAdmin);
 app.delete("/admin/vehicle/delete", isAuth, deleteOneVehicleAdmin);
 
 // User Vehicle Routes
-app.post("/links/create", isAuth, createVehicle);
-app.get("/user/links", isAuth, getOneVehicle);
-app.get("/user/links/all", isAuth, getAllVehicle);
-app.put("/user/links/update", isAuth, updateVehicleUser);
-app.delete("/user/links/delete", isAuth, deleteVehicleUser);
+app.post("/vehicle/create", isAuth, createVehicle);
+app.get("/user/vehicle", isAuth, getOneVehicle);
+app.get("/user/vehicle/all", isAuth, getAllVehicle);
+app.put("/user/vehicle/update", isAuth, updateVehicleUser);
+app.delete("/user/vehicle/delete", isAuth, deleteVehicleUser);
 
 //PORT
 app.listen(port, () => {
