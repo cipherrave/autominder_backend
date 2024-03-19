@@ -2,10 +2,18 @@ import pool from "../database/connection.js";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import emailjs from "@emailjs/browser";
+import nodemailer from "nodemailer";
 
 // Create a users (ADMIN, PERSONAL, COMPANY)
 export async function createUser(req, res) {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "cipherravedev@gmail.com",
+      pass: "xmdjfkaysfvnfuaz",
+    },
+  });
+
   try {
     // Generate unique users id and validation key using nanoid
     let generatedID = nanoid();
@@ -38,6 +46,24 @@ export async function createUser(req, res) {
           admin_id,
         ]
       );
+
+      const mailOptions = {
+        from: "cipherravedev@gmail.com",
+        to: email,
+        subject: "Autominder Verification Link",
+        text:
+          "Thank you for using our service. Here's the link to activate your account: https://autominder-backend.onrender.com/validate/" +
+          validation_key,
+      };
+
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Email sent");
+        }
+      });
+
       // Generate a response
       const apiResponse = {
         message: "Admin created successfully. Check email for validation link",
@@ -62,25 +88,25 @@ export async function createUser(req, res) {
           company_name,
         ]
       );
-      // Send verification link via emailjs
-      const emailParams = {
-        name: fname,
-        email: email,
-        validation_key: validation_key,
+
+      const mailOptions = {
+        from: "cipherravedev@gmail.com",
+        to: email,
+        subject: "Autominder Verification Link",
+        text:
+          "Thank you for using our service. Here's the link to activate your account: https://autominder-backend.onrender.com/validate/" +
+          validation_key,
       };
 
-      emailjs
-        .send("autominder", "autominder_template", emailParams)
-        .then((res) => {
-          alert(
-            "Registration successful. Check your email for account validation ."
-          );
-        })
-        .catch((err) => console.log(err));
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Email sent");
+        }
+      });
 
-      res.status(200).json(emailParams);
-
-      // res.status(200).json(newUser.rows[0]);
+      res.status(200).json(newUser.rows[0]);
     }
   } catch (error) {
     res.status(500).json(error.message);
