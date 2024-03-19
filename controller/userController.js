@@ -2,8 +2,6 @@ import pool from "../database/connection.js";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import fs from "fs";
-import fastcsv from "fast-csv";
 
 // Create a users (ADMIN, PERSONAL, COMPANY)
 export async function createUser(req, res) {
@@ -149,6 +147,7 @@ export async function loginUser(req, res) {
               user_id: checkEmail.rows[0].user_id,
               email: checkEmail.rows[0].email,
               validated: checkEmail.rows[0].validated,
+              admin_id: checkEmail.rows[0].admin_id,
             };
             const token = jwt.sign(userData, process.env.JWT_SECRET);
 
@@ -213,7 +212,6 @@ export async function getAllUserAdmin(req, res) {
     // Read data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-
     // Check admin id availability in token
     const checkAdminId = await pool.query(
       "SELECT * FROM users WHERE admin_id = $1",
@@ -368,7 +366,7 @@ export async function deleteUserAdmin(req, res) {
   }
 }
 
-// Delete own account - users & COMPANY
+// Delete own account - USERS & COMPANY
 export async function deleteUser(req, res) {
   try {
     // Read user_id from token
