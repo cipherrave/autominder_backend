@@ -2,6 +2,7 @@ import pool from "../database/connection.js";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import emailjs from "@emailjs/browser";
 
 // Create a users (ADMIN, PERSONAL, COMPANY)
 export async function createUser(req, res) {
@@ -61,10 +62,22 @@ export async function createUser(req, res) {
           company_name,
         ]
       );
-      // Generate a response
-      const apiResponse = {
-        message: "User created successfully. Check email for validation link",
+      // Send verification link via emailjs
+      const emailParams = {
+        name: fname,
+        email: email,
+        validation_key: validation_key,
       };
+
+      emailjs
+        .send(autominder, autominder_template, emailParams)
+        .then((res) => {
+          alert(
+            "Registration successful. Check your email for account validation ."
+          );
+        })
+        .catch((err) => console.log(err));
+
       res.status(200).json(newUser.rows[0]);
     }
   } catch (error) {
