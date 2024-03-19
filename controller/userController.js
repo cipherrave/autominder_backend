@@ -78,7 +78,9 @@ export async function createUser(req, res) {
         })
         .catch((err) => console.log(err));
 
-      res.status(200).json(newUser.rows[0]);
+      res.status(200).json(emailParams);
+
+      // res.status(200).json(newUser.rows[0]);
     }
   } catch (error) {
     res.status(500).json(error.message);
