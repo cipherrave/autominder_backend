@@ -70,7 +70,7 @@ export async function createUser(req, res) {
       };
 
       emailjs
-        .send(autominder, autominder_template, emailParams)
+        .send("autominder", "autominder_template", emailParams)
         .then((res) => {
           alert(
             "Registration successful. Check your email for account validation ."
