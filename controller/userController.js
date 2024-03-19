@@ -340,7 +340,7 @@ export async function updateUser(req, res) {
 export async function deleteUserAdmin(req, res) {
   try {
     // Read data from token
-    const authData = req.users;
+    const authData = req.user;
     const admin_id = authData.admin_id;
     const checkAdminId = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
