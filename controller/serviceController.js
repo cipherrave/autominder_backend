@@ -298,13 +298,17 @@ export async function deleteOneServiceAdmin(req, res) {
       return res.status(404).json("Admin id not found. Not authorized!");
     } else {
       const { service_id } = req.body;
-      const deleteOneService = await pool.query(
-        "DELETE FROM service WHERE service_id = $1",
+      const checkOneService = await pool.query(
+        "SELECT FROM service WHERE (service_id) = ($1)",
         [service_id]
       );
-      if (deleteOneService.rowCount === 0) {
+      if (checkOneService.rowCount === 0) {
         return res.status(404).json("Service not found.");
       } else {
+        const deleteOneService = await pool.query(
+          "DELETE FROM service WHERE service_id = $1",
+          [service_id]
+        );
         res.json("Service has been deleted");
       }
     }
@@ -326,15 +330,19 @@ export async function deleteServiceUser(req, res) {
       return res.status(404).json("User id not found.");
     } else {
       const { service_id, vehicle_id } = req.body;
-      const deleteOneService = await pool.query(
-        "DELETE FROM service WHERE (service_id, vehicle_id) = ($1, $2)",
+      const checkOneService = await pool.query(
+        "SELECT FROM service WHERE (service_id, vehicle_id) = ($1, $2)",
         [service_id, vehicle_id]
       );
-      if (deleteOneService.rowCount === 0) {
+      if (checkOneService.rowCount === 0) {
         return res
           .status(404)
           .json("service not found or the service is not yours.");
       } else {
+        const deleteOneService = await pool.query(
+          "DELETE FROM service WHERE (service_id, vehicle_id) = ($1, $2)",
+          [service_id, vehicle_id]
+        );
         res.json("service has been deleted");
       }
     }

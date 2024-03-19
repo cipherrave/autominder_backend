@@ -277,13 +277,17 @@ export async function deleteOneVehicleAdmin(req, res) {
       return res.status(404).json("Admin id not found. Not authorized!");
     } else {
       const { reg_num } = req.body;
-      const deleteOneVehicle = await pool.query(
-        "DELETE FROM vehicle WHERE reg_num = $1",
+      const checkRegNum = await pool.query(
+        "SELECT * FROM vehicle WHERE reg_num=$1",
         [reg_num]
       );
-      if (deleteOneVehicle.rowCount === 0) {
+      if (checkRegNum.rowCount === 0) {
         return res.status(404).json("Vehicle not found.");
       } else {
+        const deleteOneVehicle = await pool.query(
+          "DELETE FROM vehicle WHERE reg_num = $1",
+          [reg_num]
+        );
         res.json("Vehicle has been deleted");
       }
     }
@@ -305,15 +309,19 @@ export async function deleteVehicleUser(req, res) {
       return res.status(404).json("User id not found.");
     } else {
       const { reg_num } = req.body;
-      const deleteOneVehicle = await pool.query(
-        "DELETE FROM vehicle WHERE (reg_num, user_id) = ($1, $2)",
-        [reg_num, user_id]
+      const checkRegNum = await pool.query(
+        "SELECT * FROM vehicle WHERE reg_num=$1",
+        [reg_num]
       );
-      if (deleteOneVehicle.rowCount === 0) {
+      if (checkRegNum.rowCount === 0) {
         return res
           .status(404)
           .json("Vehicle not found or the vehicle is not yours.");
       } else {
+        const deleteOneVehicle = await pool.query(
+          "DELETE FROM vehicle WHERE (reg_num, user_id) = ($1, $2)",
+          [reg_num, user_id]
+        );
         res.json("Vehicle has been deleted");
       }
     }

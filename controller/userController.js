@@ -349,15 +349,19 @@ export async function deleteUserAdmin(req, res) {
     if (checkAdminId.rowCount === 0) {
       return res.status(404).json("Admin id not found. Not Authorized!");
     } else {
-      const { email } = req.body;
       // Delete data from specified email
-      const deleteUser = await pool.query(
-        "DELETE FROM users WHERE email = $1",
+      const { email } = req.body;
+      const checkEmail = await pool.query(
+        "SELECT * FROM users WHERE email=$1",
         [email]
       );
-      if (deleteUser.rowCount === 0) {
+      if (checkEmail.rowCount === 0) {
         return res.status(404).json("Email not found");
       } else {
+        const deleteUser = await pool.query(
+          "DELETE FROM users WHERE email = $1",
+          [email]
+        );
         res.json("User has been deleted");
       }
     }
