@@ -72,6 +72,10 @@ export async function createUser(req, res) {
       emailjs
         .send("autominder", "autominder_template", emailParams)
         .then((res) => {
+          fname = "";
+          email = "";
+          validation_key = "";
+          console.log(res);
           alert(
             "Registration successful. Check your email for account validation ."
           );
