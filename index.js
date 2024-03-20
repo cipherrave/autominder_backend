@@ -64,6 +64,11 @@ app.get("/health", healthCheck);
 // Validation Route
 app.get("/validate/:validation_key", validateAccount);
 
+// Dashboard
+app.get("/protected", isAuth, function (req, res) {
+  res.status(200).json({ message: "Protected Route", user: req.user });
+});
+
 // Admin Routes
 app.get("/admin/user/", isAuth, getOneUserAdmin);
 app.get("/admin/user/all", isAuth, getAllUserAdmin);
