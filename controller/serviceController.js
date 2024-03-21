@@ -32,7 +32,7 @@ export async function createService(req, res) {
         const service_id = generatedID;
         // Insert details into service table
         const newService = await pool.query(
-          "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, notes, service_date, vehicle_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+          "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, notes, service_date, vehicle_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
           [
             service_id,
             next_mileage,
@@ -42,6 +42,7 @@ export async function createService(req, res) {
             place,
             notes,
             service_date,
+            user_id,
             vehicle_id,
           ]
         );
@@ -63,6 +64,7 @@ export async function createService(req, res) {
             place: readNewService.rows[0].place,
             notes: readNewService.rows[0].notes,
             service_date: readNewService.rows[0].service_date,
+            user_id: readNewService.rows[0].user_id,
             vehicle_id: readNewService.rows[0].vehicle_id,
           },
         };
@@ -102,7 +104,7 @@ export async function getAllserviceOneUserAdmin(req, res) {
     // Read admin_id data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-    const { email } = req.body;
+    const { user_id } = req.body;
 
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
@@ -113,8 +115,8 @@ export async function getAllserviceOneUserAdmin(req, res) {
     } else {
       // List all links in links table from one user
       const allService = await pool.query(
-        "SELECT * FROM service WHERE email = $1",
-        [email]
+        "SELECT * FROM service WHERE user_id = $1",
+        [user_id]
       );
       if (allService.rowCount === 0) {
         return res.status(404).json("No service with specified email");
@@ -142,10 +144,9 @@ export async function getAllService(req, res) {
       return res.status(404).json("User id not found.");
     } else {
       // List all service in service table where the user_id is same as in token
-      const { vehicle_id } = req.body;
       const allService = await pool.query(
-        "SELECT * FROM service WHERE vehicle_id = $1",
-        [vehicle_id]
+        "SELECT * FROM service WHERE user_id = $1",
+        [user_id]
       );
       return res.json(allService.rows);
     }
@@ -200,10 +201,10 @@ export async function getOneService(req, res) {
       return res.status(404).json("User id not found.");
     } else {
       // Get data from service_id
-      const { service_id, vehicle_id } = req.body;
+      const { service_id } = req.body;
       const oneService = await pool.query(
-        "SELECT * FROM service WHERE (service_id, vehicle_id)  = ($1, $2)",
-        [service_id, vehicle_id]
+        "SELECT * FROM service WHERE (service_id, user_id)  = ($1, $2)",
+        [service_id, user_id]
       );
       if (oneService.rowCount === 0) {
         return res.status(404).json("No service with specified service_id");
@@ -329,10 +330,10 @@ export async function deleteServiceUser(req, res) {
     if (checkUserID.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      const { service_id, vehicle_id } = req.body;
+      const { service_id } = req.body;
       const checkOneService = await pool.query(
-        "SELECT FROM service WHERE (service_id, vehicle_id) = ($1, $2)",
-        [service_id, vehicle_id]
+        "SELECT FROM service WHERE (service_id, user_id) = ($1, $2)",
+        [service_id, user_id]
       );
       if (checkOneService.rowCount === 0) {
         return res
@@ -340,8 +341,8 @@ export async function deleteServiceUser(req, res) {
           .json("service not found or the service is not yours.");
       } else {
         const deleteOneService = await pool.query(
-          "DELETE FROM service WHERE (service_id, vehicle_id) = ($1, $2)",
-          [service_id, vehicle_id]
+          "DELETE FROM service WHERE (service_id, user_id) = ($1, $2)",
+          [service_id, user_id]
         );
         res.json("service has been deleted");
       }

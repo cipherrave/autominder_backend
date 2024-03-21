@@ -188,9 +188,12 @@ export async function loginUser(req, res) {
             // Generate JWT token using userData with SECRET and EXPIRATION from .env file
             const userData = {
               user_id: checkEmail.rows[0].user_id,
+              fname: checkEmail.rows[0].fname,
+              lname: checkEmail.rows[0].lname,
               email: checkEmail.rows[0].email,
               validated: checkEmail.rows[0].validated,
               admin_id: checkEmail.rows[0].admin_id,
+              company_name: checkEmail.rows[0].company_name,
             };
             const token = jwt.sign(userData, process.env.JWT_SECRET);
 
