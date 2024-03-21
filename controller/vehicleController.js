@@ -158,10 +158,10 @@ export async function getOneVehicleAdmin(req, res) {
     if (checkAdminID.rowCount === 0) {
       return res.status(404).json("Admin id not found. Not authorized!");
     } else {
-      const { reg_num } = req.body;
+      const { vehicle_id } = req.params;
       const oneVehicle = await pool.query(
-        "SELECT * FROM vehicle WHERE reg_num=$1",
-        [reg_num]
+        "SELECT * FROM vehicle WHERE vehicle_id=$1",
+        [vehicle_id]
       );
       if (oneVehicle.rowCount === 0) {
         return res
@@ -190,10 +190,10 @@ export async function getOneVehicle(req, res) {
     if (checkUserID.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      const { reg_num } = req.body;
+      const { vehicle_id } = req.params;
       const oneVehicle = await pool.query(
-        "SELECT * FROM vehicle WHERE (reg_num, user_id)  = ($1, $2)",
-        [reg_num, user_id]
+        "SELECT * FROM vehicle WHERE (vehicle_id, user_id)  = ($1, $2)",
+        [vehicle_id, user_id]
       );
       if (oneVehicle.rowCount === 0) {
         return res.status(404).json("No vehicle with specified vehicle_id");
@@ -212,6 +212,7 @@ export async function updateVehicleUser(req, res) {
     // Read data from token
     const authData = req.user;
     const user_id = authData.user_id;
+    const vehicle_id = req.params;
     const { vname, reg_num, brand, model, purchase_year, mileage, notes } =
       req.body;
 
@@ -223,24 +224,33 @@ export async function updateVehicleUser(req, res) {
     if (checkUserId.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      // Check reg_num availability in database
-      const checkRegNum = await pool.query(
-        "SELECT * FROM vehicle WHERE (reg_num, user_id) = ($1,$2)",
-        [reg_num, user_id]
+      // Check vehicle_id availability in database
+      const checkVehicleId = await pool.query(
+        "SELECT * FROM vehicle WHERE (vehicle_id, user_id) = ($1,$2)",
+        [vehicle_id, user_id]
       );
-      if (checkRegNum.rowCount === 0) {
+      if (checkVehicleId.rowCount === 0) {
         return res.status(404).json("Vehicle does not exist");
       } else {
         // Update vehicles with user_id specified in token
         const updateVehicle = await pool.query(
-          "UPDATE vehicle SET (vname, brand, model, purchase_year, mileage, notes) = ($1, $2, $3, $4, $5, $6) WHERE (reg_num, user_id)= ($7, $8)",
-          [vname, brand, model, purchase_year, mileage, notes, reg_num, user_id]
+          "UPDATE vehicle SET (vname, brand, model, purchase_year, mileage, notes) = ($1, $2, $3, $4, $5, $6) WHERE (vehicle_id, user_id)= ($7, $8)",
+          [
+            vname,
+            brand,
+            model,
+            purchase_year,
+            mileage,
+            notes,
+            vehicle_id,
+            user_id,
+          ]
         );
 
         // Read back new data from user_id
         const updateVehicleRead = await pool.query(
-          "SELECT * FROM vehicle WHERE reg_num = $1",
-          [reg_num]
+          "SELECT * FROM vehicle WHERE vehicle_id = $1",
+          [vehicle_id]
         );
 
         const updatedVehicleData = {
@@ -269,6 +279,7 @@ export async function deleteOneVehicleAdmin(req, res) {
   try {
     const authData = req.user;
     const admin_id = authData.admin_id;
+    const vehicle_id = req.params;
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
       [admin_id]
@@ -276,17 +287,16 @@ export async function deleteOneVehicleAdmin(req, res) {
     if (checkAdminID.rowCount === 0) {
       return res.status(404).json("Admin id not found. Not authorized!");
     } else {
-      const { reg_num } = req.body;
-      const checkRegNum = await pool.query(
-        "SELECT * FROM vehicle WHERE reg_num=$1",
-        [reg_num]
+      const checkVehicleId = await pool.query(
+        "SELECT * FROM vehicle WHERE vehicle_id=$1",
+        [vehicle_id]
       );
-      if (checkRegNum.rowCount === 0) {
+      if (checkVehicleId.rowCount === 0) {
         return res.status(404).json("Vehicle not found.");
       } else {
         const deleteOneVehicle = await pool.query(
-          "DELETE FROM vehicle WHERE reg_num = $1",
-          [reg_num]
+          "DELETE FROM vehicle WHERE vehicle_id = $1",
+          [vehicle_id]
         );
         res.json("Vehicle has been deleted");
       }
@@ -308,19 +318,19 @@ export async function deleteVehicleUser(req, res) {
     if (checkUserID.rowCount === 0) {
       return res.status(404).json("User id not found.");
     } else {
-      const { reg_num } = req.body;
-      const checkRegNum = await pool.query(
-        "SELECT * FROM vehicle WHERE reg_num=$1",
-        [reg_num]
+      const { vehicle_id } = req.params;
+      const checkVehicleId = await pool.query(
+        "SELECT * FROM vehicle WHERE vehicle_id=$1",
+        [vehicle_id]
       );
-      if (checkRegNum.rowCount === 0) {
+      if (checkVehicleId.rowCount === 0) {
         return res
           .status(404)
           .json("Vehicle not found or the vehicle is not yours.");
       } else {
         const deleteOneVehicle = await pool.query(
-          "DELETE FROM vehicle WHERE (reg_num, user_id) = ($1, $2)",
-          [reg_num, user_id]
+          "DELETE FROM vehicle WHERE (vehicle_id, user_id) = ($1, $2)",
+          [vehicle_id, user_id]
         );
         res.json("Vehicle has been deleted");
       }

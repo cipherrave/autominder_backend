@@ -429,23 +429,12 @@ export async function deleteUser(req, res) {
     if (checkUserID.rowCount === 0) {
       return res.status(404).json("user id not found.");
     } else {
-      // Enter own password to confirm account deletion
-      const { password } = req.body;
-      // Compare using hashed password for verification
-      const isPasswordCorrect = await bcrypt.compare(
-        password,
-        checkUserID.rows[0].password
+      // Delete users from user_id token
+      const deleteUser = await pool.query(
+        "DELETE FROM users WHERE user_id=$1",
+        [user_id]
       );
-      if (!isPasswordCorrect) {
-        return res.status(401).json("Password incorrect");
-      } else {
-        // Delete users from user_id token
-        const deleteUser = await pool.query(
-          "DELETE FROM users WHERE user_id=$1",
-          [user_id]
-        );
-        res.json("user has been deleted");
-      }
+      res.json("user has been deleted");
     }
   } catch (error) {
     res.status(500).json(error.message);
