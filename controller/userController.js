@@ -3,6 +3,8 @@ import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
+import { validateFail } from "./pageController.js";
+import { validated } from "./pageController.js";
 
 // Create a users (ADMIN, PERSONAL, COMPANY)
 export async function createUser(req, res) {
@@ -139,10 +141,11 @@ export async function validateAccount(req, res) {
         message: "Validation successful",
         email: isValidationKeyValid.rows[0].email,
       };
-
+      validated;
       res.status(200).json(apiResponse);
     }
   } catch (error) {
+    validateFail;
     res.status(500).json(error.message);
   }
 }
@@ -205,7 +208,6 @@ export async function loginUser(req, res) {
                 fname: checkEmail.rows[0].fname,
                 lname: checkEmail.rows[0].lname,
                 email: checkEmail.rows[0].email,
-                validated: checkEmail.rows[0].validated,
                 company_name: checkEmail.rows[0].company_name,
                 admin_id: checkEmail.rows[0].admin_id,
               },
@@ -337,46 +339,32 @@ export async function updateUserAdmin(req, res) {
 // Update a user - USER, COMPANY
 export async function updateUser(req, res) {
   try {
-    // Read data from token
-    const authData = req.user;
-    const user_id = authData.user_id;
-
-    // Check users id availability in token
-    const checkUserId = await pool.query(
+    const { fname, lname, password, company, company_name, user_id } = req.body;
+    // Generate password hash
+    const salt = await bcrypt.genSalt(10);
+    const encryptedPassword = await bcrypt.hash(password, salt);
+    // Update users with user_id specified in token
+    const updateUser = await pool.query(
+      "UPDATE users SET (fname, lname, password, company, company_name) = ($1, $2, $3, $4, $5) WHERE (user_id) = ($6)",
+      [fname, lname, encryptedPassword, company, company_name, user_id]
+    );
+    // Read back new data from user_id
+    const updateUserRead = await pool.query(
       "SELECT * FROM users WHERE user_id = $1",
       [user_id]
     );
-    if (checkUserId.rowCount === 0) {
-      return res.status(404).json("User not found.");
-    } else {
-      const { fname, lname, password, company_name } = req.body;
-      // Generate password hash
-      const salt = await bcrypt.genSalt(10);
-      const encryptedPassword = await bcrypt.hash(password, salt);
 
-      // Update users with user_id specified in token
-      const updateUser = await pool.query(
-        "UPDATE users SET (fname, lname, password, company_name) = ($1, $2, $3, $4) WHERE (user_id) = ($5)",
-        [fname, lname, encryptedPassword, company_name, user_id]
-      );
+    const updatedUserData = {
+      user_id: updateUserRead.rows[0].user_id,
+      fname: updateUserRead.rows[0].fname,
+      lname: updateUserRead.rows[0].lname,
+      email: updateUserRead.rows[0].email,
+      company_name: updateUserRead.rows[0].company_name,
+      admin_id: updateUserRead.rows[0].admin_id,
+    };
+    const token = jwt.sign(updatedUserData, process.env.JWT_SECRET);
 
-      // Read back new data from user_id
-      const updateUserRead = await pool.query(
-        "SELECT * FROM users WHERE user_id = $1",
-        [user_id]
-      );
-
-      const apiResponse = {
-        message: "User data has been updated",
-        fname: updateUserRead.rows[0].fname,
-        lname: updateUserRead.rows[0].lname,
-        email: updateUserRead.rows[0].email,
-        password: password,
-        company_name: updateUserRead.rows[0].company_name,
-      };
-
-      res.status(200).json(apiResponse);
-    }
+    res.status(200).json(updatedUserData);
   } catch (error) {
     res.status(500).json(error.message);
   }

@@ -66,7 +66,10 @@ app.get("/validate/:validation_key", validateAccount);
 
 // Dashboard
 app.get("/protected", isAuth, function (req, res) {
-  res.status(200).json({ message: "Protected Route", user: req.user });
+  res.status(200).json({
+    message: "Protected Route",
+    user: req.user,
+  });
 });
 
 // Admin Routes
@@ -78,7 +81,7 @@ app.delete("/admin/deleteUser", isAuth, deleteUserAdmin);
 // User Routes
 app.post("/register", createUser);
 app.post("/login", loginUser);
-app.put("/user/updateUser", isAuth, updateUser);
+app.put("/user/updateUser", updateUser);
 app.delete("/user/deleteUser", isAuth, deleteUser);
 
 // Admin Vehicle Routes
@@ -88,10 +91,10 @@ app.post("/admin/vehicle/user/all", isAuth, getAllVehicleOneUserAdmin);
 app.delete("/admin/vehicle/delete", isAuth, deleteOneVehicleAdmin);
 
 // User Vehicle Routes
-app.post("/vehicle/create", isAuth, createVehicle);
-app.get("/user/vehicle", isAuth, getOneVehicle);
+app.post("/vehicle/create", createVehicle);
+app.get("/user/vehicle/id/:vehicle_id", getOneVehicle);
 app.get("/user/vehicle/all", isAuth, getAllVehicle);
-app.put("/user/vehicle/update", isAuth, updateVehicleUser);
+app.put("/user/vehicle/update", updateVehicleUser);
 app.delete("/user/vehicle/delete", isAuth, deleteVehicleUser);
 
 // Admin Service Routes
@@ -101,11 +104,11 @@ app.post("/admin/service/user/all", isAuth, getAllserviceOneUserAdmin);
 app.delete("/admin/service/delete", isAuth, deleteOneServiceAdmin);
 
 // User Service Routes
-app.post("/service/create", isAuth, createService);
-app.get("/user/service", isAuth, getOneService);
+app.post("/service/create", createService);
+app.get("/user/service", getOneService);
 app.get("/user/service/all", isAuth, getAllService);
-app.put("/user/service/update", isAuth, updateServiceUser);
-app.delete("/user/service/delete", isAuth, deleteServiceUser);
+app.put("/user/service/update", updateServiceUser);
+app.delete("/user/service/delete", deleteServiceUser);
 
 //PORT
 app.listen(port, () => {
