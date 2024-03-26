@@ -168,24 +168,6 @@ export async function getOneVehicleAdmin(req, res) {
   }
 }
 
-//Get one vehicle - USER
-export async function getOneVehicle(req, res) {
-  try {
-    const { vehicle_id } = req.params;
-    const oneVehicle = await pool.query(
-      "SELECT * FROM vehicle WHERE vehicle_id=$1",
-      [vehicle_id]
-    );
-    if (oneVehicle.rowCount === 0) {
-      return res.status(404).json("No vehicle with specified vehicle_id");
-    } else {
-      return res.json(oneVehicle.rows);
-    }
-  } catch (error) {
-    res.status(500).json(error.message);
-  }
-}
-
 // Update a vehicle - USER
 export async function updateVehicleUser(req, res) {
   try {
@@ -285,31 +267,19 @@ export async function deleteOneVehicleAdmin(req, res) {
 // Delete a vehicle - USER
 export async function deleteVehicleUser(req, res) {
   try {
-    const authData = req.user;
-    const user_id = authData.user_id;
+    const { vehicle_id, user_id } = req.body;
     const checkUserID = await pool.query(
-      "SELECT * FROM users WHERE user_id=$1",
-      [user_id]
+      "SELECT * FROM vehicle WHERE vehicle_id=$1",
+      [vehicle_id]
     );
     if (checkUserID.rowCount === 0) {
-      return res.status(404).json("User id not found.");
+      return res.status(404).json("Vehicle_id not found.");
     } else {
-      const { vehicle_id } = req.params;
-      const checkVehicleId = await pool.query(
-        "SELECT * FROM vehicle WHERE vehicle_id=$1",
-        [vehicle_id]
+      const deleteOneVehicle = await pool.query(
+        "DELETE FROM vehicle WHERE (vehicle_id,user_id)=($1,$2)",
+        [vehicle_id, user_id]
       );
-      if (checkVehicleId.rowCount === 0) {
-        return res
-          .status(404)
-          .json("Vehicle not found or the vehicle is not yours.");
-      } else {
-        const deleteOneVehicle = await pool.query(
-          "DELETE FROM vehicle WHERE (vehicle_id, user_id) = ($1, $2)",
-          [vehicle_id, user_id]
-        );
-        res.json("Vehicle has been deleted");
-      }
+      res.json("Vehicle has been deleted");
     }
   } catch (error) {
     res.status(500).json(error.message);

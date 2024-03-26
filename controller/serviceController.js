@@ -177,37 +177,6 @@ export async function getOneServiceAdmin(req, res) {
   }
 }
 
-//Get one service - USER
-export async function getOneService(req, res) {
-  try {
-    // Read user_id data from token
-    const authData = req.user;
-    const user_id = authData.user_id;
-
-    const checkUserID = await pool.query(
-      "SELECT * FROM users WHERE user_id=$1",
-      [user_id]
-    );
-    if (checkUserID.rowCount === 0) {
-      return res.status(404).json("User id not found.");
-    } else {
-      // Get data from service_id
-      const { service_id } = req.body;
-      const oneService = await pool.query(
-        "SELECT * FROM service WHERE (service_id, user_id)  = ($1, $2)",
-        [service_id, user_id]
-      );
-      if (oneService.rowCount === 0) {
-        return res.status(404).json("No service with specified service_id");
-      } else {
-        return res.json(oneService.rows);
-      }
-    }
-  } catch (error) {
-    res.status(500).json(error.message);
-  }
-}
-
 // Update a service - USER
 export async function updateServiceUser(req, res) {
   try {
@@ -297,13 +266,13 @@ export async function deleteServiceUser(req, res) {
   try {
     const { service_id, user_id } = req.body;
     const checkOneService = await pool.query(
-      "SELECT FROM service WHERE (service_id, user_id) = ($1, $2)",
-      [service_id, user_id]
+      "SELECT FROM service WHERE (service_id) = ($1)",
+      [service_id]
     );
     if (checkOneService.rowCount === 0) {
       return res
         .status(404)
-        .json("service not found or the service is not yours.");
+        .json("Service not found or the service is not yours.");
     } else {
       const deleteOneService = await pool.query(
         "DELETE FROM service WHERE (service_id, user_id) = ($1, $2)",

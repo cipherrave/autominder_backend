@@ -21,7 +21,6 @@ import {
   deleteVehicleUser,
   getAllVehicle,
   getAllVehicleOneUserAdmin,
-  getOneVehicle,
   getOneVehicleAdmin,
   updateVehicleUser,
 } from "./controller/vehicleController.js";
@@ -34,7 +33,6 @@ import {
   getAllService,
   getAllServiceAdmin,
   getAllserviceOneUserAdmin,
-  getOneService,
   getOneServiceAdmin,
   updateServiceUser,
 } from "./controller/serviceController.js";
@@ -92,10 +90,9 @@ app.delete("/admin/vehicle/delete", isAuth, deleteOneVehicleAdmin);
 
 // User Vehicle Routes
 app.post("/vehicle/create", createVehicle);
-app.get("/user/vehicle/id/:vehicle_id", getOneVehicle);
 app.get("/user/vehicle/all", isAuth, getAllVehicle);
 app.put("/user/vehicle/update", updateVehicleUser);
-app.delete("/user/vehicle/delete", isAuth, deleteVehicleUser);
+app.delete("/user/vehicle/delete", deleteVehicleUser);
 
 // Admin Service Routes
 app.get("/admin/service", isAuth, getOneServiceAdmin);
@@ -105,7 +102,6 @@ app.delete("/admin/service/delete", isAuth, deleteOneServiceAdmin);
 
 // User Service Routes
 app.post("/service/create", createService);
-app.get("/user/service", getOneService);
 app.get("/user/service/all", isAuth, getAllService);
 app.put("/user/service/update", updateServiceUser);
 app.delete("/user/service/delete", deleteServiceUser);
