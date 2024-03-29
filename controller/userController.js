@@ -75,7 +75,7 @@ export async function createAdmin(req, res) {
   }
 }
 
-// Create a users (ADMIN, PERSONAL, COMPANY)
+// Create a user PERSONAL, COMPANY
 export async function createUser(req, res) {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -99,49 +99,6 @@ export async function createUser(req, res) {
       req.body;
     if (!email || !password) {
       return res.status(400).json("Missing required fields");
-    } else if (admin === true) {
-      const admin_id = nanoid();
-      const salt = await bcrypt.genSalt(10);
-      const encryptedPassword = await bcrypt.hash(password, salt);
-      const validated = false;
-      const newAdmin = await pool.query(
-        "INSERT INTO users (user_id, fname, lname, email, password, validation_key, validated, admin_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-        [
-          user_id,
-          fname,
-          lname,
-          email,
-          encryptedPassword,
-          validation_key,
-          validated,
-          company,
-          company_name,
-          admin_id,
-        ]
-      );
-
-      const mailOptions = {
-        from: "cipherravedev@gmail.com",
-        to: email,
-        subject: "Autominder Verification Link",
-        text:
-          "Thank you for using our service. Here's the link to activate your account: https://autominder-backend.onrender.com/validate/" +
-          validation_key,
-      };
-
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log("Email sent");
-        }
-      });
-
-      // Generate a response
-      const apiResponse = {
-        message: "Admin created successfully. Check email for validation link",
-      };
-      res.status(200).json(newAdmin.rows[0]);
     } else {
       // Inserting encrypted new users details
       const salt = await bcrypt.genSalt(10);
@@ -291,7 +248,7 @@ export async function loginAdmin(req, res) {
   }
 }
 
-// Log into account - ADMIN, USER, COMPANY
+// Log into account - USER, COMPANY
 export async function loginUser(req, res) {
   try {
     // Making sure users fill all fields
