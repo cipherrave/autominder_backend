@@ -4,8 +4,10 @@ import healthCheck from "./controller/healthCheck.js";
 import dotenv from "dotenv";
 import {
   createUser,
+  createAdmin,
   validateAccount,
   loginUser,
+  loginAdmin,
   getOneUserAdmin,
   getAllUserAdmin,
   updateUserAdmin,
@@ -20,6 +22,7 @@ import {
   deleteOneVehicleAdmin,
   deleteVehicleUser,
   getAllVehicle,
+  getAllVehicleAdmin,
   getAllVehicleOneUserAdmin,
   getOneVehicleAdmin,
   updateVehicleUser,
@@ -36,6 +39,9 @@ import {
   getOneServiceAdmin,
   updateServiceUser,
 } from "./controller/serviceController.js";
+import multer from "multer";
+
+const upload = multer({ dest: "./public/data/uploads/" });
 
 const app = express();
 //import links
@@ -66,39 +72,58 @@ app.get("/validate/:validation_key", validateAccount);
 app.get("/protected", isAuth, function (req, res) {
   res.status(200).json({
     message: "Protected Route",
-    user: req.user,
+    user_id: req.user_id,
+  });
+});
+app.get("/admin/protected", isAuth, function (req, res) {
+  res.status(200).json({
+    message: "Protected Route",
+    user_id: req.user_id,
+    admin_id: req.admin_id,
   });
 });
 
 // Admin Routes
-app.get("/admin/user/", isAuth, getOneUserAdmin);
-app.get("/admin/user/all", isAuth, getAllUserAdmin);
-app.put("/admin/updateUser", isAuth, updateUserAdmin);
-app.delete("/admin/deleteUser", isAuth, deleteUserAdmin);
+app.post("/admin/register", createAdmin);
+app.post("/admin/login", loginAdmin);
+app.get("/admin/user", getOneUserAdmin);
+app.get("/admin/user/all", getAllUserAdmin);
+app.put("/admin/updateUser", updateUserAdmin);
+app.delete("/admin/deleteUser", deleteUserAdmin);
 
 // User Routes
 app.post("/register", createUser);
 app.post("/login", loginUser);
 app.put("/user/updateUser", updateUser);
 app.delete("/user/deleteUser", isAuth, deleteUser);
+app.post("/user/photo", upload.single("avatar"), function (req, res) {
+  // req.file is the `avatar` file
+  // req.body will hold the text fields, if there were any
+  console.log(req.file, req.body);
+});
 
 // Admin Vehicle Routes
-app.get("/admin/vehicle", isAuth, getOneVehicleAdmin);
-app.get("/admin/vehicle/all", isAuth, getAllVehicle);
-app.post("/admin/vehicle/user/all", isAuth, getAllVehicleOneUserAdmin);
-app.delete("/admin/vehicle/delete", isAuth, deleteOneVehicleAdmin);
+app.get("/admin/vehicle", getOneVehicleAdmin);
+app.get("/admin/vehicle/all", getAllVehicleAdmin);
+app.post("/admin/vehicle/user/all", getAllVehicleOneUserAdmin);
+app.delete("/admin/vehicle/delete", deleteOneVehicleAdmin);
 
 // User Vehicle Routes
 app.post("/vehicle/create", createVehicle);
 app.get("/user/vehicle/all", isAuth, getAllVehicle);
 app.put("/user/vehicle/update", updateVehicleUser);
 app.delete("/user/vehicle/delete", deleteVehicleUser);
+app.post("/user/vehicle/photos", upload.single("avatar"), function (req, res) {
+  // req.file is the `avatar` file
+  // req.body will hold the text fields, if there were any
+  console.log(req.file, req.body);
+});
 
 // Admin Service Routes
-app.get("/admin/service", isAuth, getOneServiceAdmin);
-app.get("/admin/service/all", isAuth, getAllServiceAdmin);
-app.post("/admin/service/user/all", isAuth, getAllserviceOneUserAdmin);
-app.delete("/admin/service/delete", isAuth, deleteOneServiceAdmin);
+app.get("/admin/service", getOneServiceAdmin);
+app.get("/admin/service/all", getAllServiceAdmin);
+app.post("/admin/service/user/all", getAllserviceOneUserAdmin);
+app.delete("/admin/service/delete", deleteOneServiceAdmin);
 
 // User Service Routes
 app.post("/service/create", createService);

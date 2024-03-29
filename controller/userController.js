@@ -6,6 +6,75 @@ import nodemailer from "nodemailer";
 import { validateFail } from "./pageController.js";
 import { validated } from "./pageController.js";
 
+// Create an admin
+export async function createAdmin(req, res) {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "cipherravedev@gmail.com",
+      pass: "xmdjfkaysfvnfuaz",
+    },
+  });
+
+  try {
+    // Generate unique users id and validation key using nanoid
+    let generatedID = nanoid();
+    const user_id = generatedID;
+
+    // Generate validation key that will be sent via email worker
+    let generatedValidationKey = nanoid();
+    const validation_key = generatedValidationKey;
+
+    // Establish what needs to be included in JSON for POST, and encrypt it
+    const { email, password, fname, lname } = req.body;
+    if (!email || !password) {
+      return res.status(400).json("Missing required fields");
+    } else {
+      const admin_id = nanoid();
+      const salt = await bcrypt.genSalt(10);
+      const encryptedPassword = await bcrypt.hash(password, salt);
+      const validated = false;
+      const newAdmin = await pool.query(
+        "INSERT INTO users (user_id, fname, lname, email, password, validation_key, validated, admin_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        [
+          user_id,
+          fname,
+          lname,
+          email,
+          encryptedPassword,
+          validation_key,
+          validated,
+          admin_id,
+        ]
+      );
+
+      const mailOptions = {
+        from: "cipherravedev@gmail.com",
+        to: email,
+        subject: "Autominder Verification Link",
+        text:
+          "Thank you for using our service. Here's the link to activate your account: https://autominder-backend.onrender.com/validate/" +
+          validation_key,
+      };
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Email sent");
+        }
+      });
+
+      // Generate a response
+      const apiResponse = {
+        message: "Admin created successfully. Check email for validation link",
+      };
+      res.status(200).json(newAdmin.rows[0]);
+    }
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+}
+
 // Create a users (ADMIN, PERSONAL, COMPANY)
 export async function createUser(req, res) {
   const transporter = nodemailer.createTransport({
@@ -36,7 +105,7 @@ export async function createUser(req, res) {
       const encryptedPassword = await bcrypt.hash(password, salt);
       const validated = false;
       const newAdmin = await pool.query(
-        "INSERT INTO users (user_id, fname, lname, email, password, validation_key, validated, admin_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8. $9, $10) RETURNING *",
+        "INSERT INTO users (user_id, fname, lname, email, password, validation_key, validated, admin_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
         [
           user_id,
           fname,
@@ -150,6 +219,78 @@ export async function validateAccount(req, res) {
   }
 }
 
+// Log into account - ADMIN
+export async function loginAdmin(req, res) {
+  try {
+    // Making sure users fill all fields
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json("Missing required fields");
+    } else {
+      // Check users email availability
+      const checkEmail = await pool.query(
+        "SELECT * FROM users WHERE email = $1",
+        [email]
+      );
+      if (checkEmail.rowCount === 0) {
+        return res.status(404).json("Email not found");
+      } else {
+        // Compare using hashed password
+        const isPasswordCorrect = await bcrypt.compare(
+          password,
+          checkEmail.rows[0].password
+        );
+        if (!isPasswordCorrect) {
+          return res.status(401).json("Password incorrect");
+        } else {
+          // Check validation status
+          const validated = true;
+          const checkValidationStatus = await pool.query(
+            "SELECT validated FROM users WHERE (email, validated) = ($1, $2)",
+            [email, validated]
+          );
+          if (checkValidationStatus.rowCount === 0) {
+            return res
+              .status(404)
+              .json(
+                "Email has not been validated. Please check your email inbox for validation link. Check your spam folder too."
+              );
+          } else {
+            // If password matches, create a token using jsonwebtoken
+            // Generate JWT token using userData with SECRET and EXPIRATION from .env file
+            const userData = {
+              user_id: checkEmail.rows[0].user_id,
+              fname: checkEmail.rows[0].fname,
+              lname: checkEmail.rows[0].lname,
+              email: checkEmail.rows[0].email,
+              validated: checkEmail.rows[0].validated,
+              admin_id: checkEmail.rows[0].admin_id,
+            };
+            const token = jwt.sign(userData, process.env.JWT_SECRET);
+
+            // Generate response
+            const apiResponse = {
+              message: "Login successful",
+              users: {
+                user_id: checkEmail.rows[0].user_id,
+                fname: checkEmail.rows[0].fname,
+                lname: checkEmail.rows[0].lname,
+                email: checkEmail.rows[0].email,
+                admin_id: checkEmail.rows[0].admin_id,
+              },
+              token: token,
+            };
+
+            res.status(200).json(apiResponse);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+}
+
 // Log into account - ADMIN, USER, COMPANY
 export async function loginUser(req, res) {
   try {
@@ -195,7 +336,6 @@ export async function loginUser(req, res) {
               lname: checkEmail.rows[0].lname,
               email: checkEmail.rows[0].email,
               validated: checkEmail.rows[0].validated,
-              admin_id: checkEmail.rows[0].admin_id,
               company_name: checkEmail.rows[0].company_name,
             };
             const token = jwt.sign(userData, process.env.JWT_SECRET);
@@ -209,7 +349,6 @@ export async function loginUser(req, res) {
                 lname: checkEmail.rows[0].lname,
                 email: checkEmail.rows[0].email,
                 company_name: checkEmail.rows[0].company_name,
-                admin_id: checkEmail.rows[0].admin_id,
               },
               token: token,
             };
@@ -227,27 +366,15 @@ export async function loginUser(req, res) {
 // Get one user - ADMIN
 export async function getOneUserAdmin(req, res) {
   try {
-    // Read data from token
-    const authData = req.user;
-    const admin_id = authData.admin_id;
-    // Check admin id availability in token
-    const checkAdminId = await pool.query(
-      "SELECT * FROM users WHERE admin_id = $1",
-      [admin_id]
-    );
-    if (checkAdminId.rowCount === 0) {
-      return res.status(404).json("Admin id not found. Not Authorized!");
+    // Enter user_id of users/admin to get info from
+    const { user_id } = req.body;
+    const oneUser = await pool.query("SELECT * FROM users WHERE iser_id = $1", [
+      user_id,
+    ]);
+    if (oneUser.rowCount === 0) {
+      return res.status(401).json("User account not found");
     } else {
-      // Enter email of users/admin to get info from
-      const { email } = req.body;
-      const oneUser = await pool.query("SELECT * FROM users WHERE email = $1", [
-        email,
-      ]);
-      if (oneUser.rowCount === 0) {
-        return res.status(401).json("users account not found");
-      } else {
-        return res.json(oneUser.rows);
-      }
+      return res.json(oneUser.rows);
     }
   } catch (error) {
     res.status(500).json(error.message);
@@ -257,21 +384,9 @@ export async function getOneUserAdmin(req, res) {
 // Get all users - ADMIN
 export async function getAllUserAdmin(req, res) {
   try {
-    // Read data from token
-    const authData = req.user;
-    const admin_id = authData.admin_id;
-    // Check admin id availability in token
-    const checkAdminId = await pool.query(
-      "SELECT * FROM users WHERE admin_id = $1",
-      [admin_id]
-    );
-    if (checkAdminId.rowCount === 0) {
-      return res.status(404).json("Admin id not found. Not Authorized!");
-    } else {
-      // Query to list all users in database
-      const alluser = await pool.query("SELECT * FROM users");
-      return res.json(alluser.rows);
-    }
+    // Query to list all users in database
+    const alluser = await pool.query("SELECT * FROM users");
+    return res.json(alluser.rows);
   } catch (error) {
     res.status(500).json(error.message);
   }
@@ -280,57 +395,31 @@ export async function getAllUserAdmin(req, res) {
 // Update users/admin account - ADMIN
 export async function updateUserAdmin(req, res) {
   try {
-    // Read data from token
-    const authData = req.user;
-    const admin_id = authData.admin_id;
-
-    // Check admin id availability in token
-    const checkAdminId = await pool.query(
-      "SELECT * FROM users WHERE admin_id = $1",
-      [admin_id]
+    const { fname, lname, email, password, company_name, user_id } = req.body;
+    // Update credentials based on email
+    const updateUserAdmin = await pool.query(
+      "UPDATE users SET (fname, lname, email, password, company_name) = ($1, $2, $3, $4, $5) WHERE (user_id) = ($6)",
+      [fname, lname, email, password, company_name, user_id]
     );
-    if (checkAdminId.rowCount === 0) {
-      return res.status(404).json("Admin id not found. Not Authorized!");
-    } else {
-      const { fname, lname, email, password, company_name } = req.body;
-      // check user_id availability
-      const checkUserId = await pool.query(
-        "SELECT * FROM users WHERE email = $1",
-        [email]
-      );
-      if (checkUserId.rowCount === 0) {
-        return res.status(404).json("User not found.");
-      } else {
-        // Generate password hash
-        const salt = await bcrypt.genSalt(10);
-        const encryptedPassword = await bcrypt.hash(password, salt);
 
-        // Update credentials based on email
-        const updateUserAdmin = await pool.query(
-          "UPDATE users SET (fname, lname, password, company_name) = ($1, $2, $3, $4) WHERE (email) = ($5)",
-          [fname, lname, encryptedPassword, company_name, email]
-        );
+    // Read back new data from user_id
+    const updateUserAdminRead = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [user_id]
+    );
 
-        // Read back new data from user_id
-        const updateUserAdminRead = await pool.query(
-          "SELECT * FROM users WHERE email = $1",
-          [email]
-        );
+    const newUserData = {
+      message: "User data has been updated",
+      user_id: updateUserAdminRead.rows[0].user_id,
+      fname: updateUserAdminRead.rows[0].fname,
+      lname: updateUserAdminRead.rows[0].lname,
+      email: updateUserAdminRead.rows[0].email,
+      password: password,
+      admin_id: updateUserAdminRead.rows[0].admin_id,
+      company_name: updateUserAdminRead.rows[0].company_name,
+    };
 
-        const newUserData = {
-          message: "User data has been updated",
-          user_id: updateUserAdminRead.rows[0].user_id,
-          fname: updateUserAdminRead.rows[0].fname,
-          lname: updateUserAdminRead.rows[0].lname,
-          email: updateUserAdminRead.rows[0].email,
-          password: password,
-          admin_id: updateUserAdminRead.rows[0].admin_id,
-          company_name: updateUserAdminRead[0].company_name,
-        };
-
-        res.status(200).json(newUserData);
-      }
-    }
+    res.status(200).json(newUserData);
   } catch (error) {
     res.status(500).json(error.message);
   }
@@ -373,31 +462,20 @@ export async function updateUser(req, res) {
 // Delete own or other account - ADMIN.
 export async function deleteUserAdmin(req, res) {
   try {
-    // Read data from token
-    const authData = req.user;
-    const admin_id = authData.admin_id;
-    const checkAdminId = await pool.query(
-      "SELECT * FROM users WHERE admin_id=$1",
-      [admin_id]
+    // Delete data from specified email
+    const { user_id } = req.body;
+    const checkUserID = await pool.query(
+      "SELECT * FROM users WHERE user_id=$1",
+      [user_id]
     );
-    if (checkAdminId.rowCount === 0) {
-      return res.status(404).json("Admin id not found. Not Authorized!");
+    if (checkUserID.rowCount === 0) {
+      return res.status(404).json("User ID not found");
     } else {
-      // Delete data from specified email
-      const { email } = req.body;
-      const checkEmail = await pool.query(
-        "SELECT * FROM users WHERE email=$1",
-        [email]
+      const deleteUser = await pool.query(
+        "DELETE FROM users WHERE user_id = $1",
+        [user_id]
       );
-      if (checkEmail.rowCount === 0) {
-        return res.status(404).json("Email not found");
-      } else {
-        const deleteUser = await pool.query(
-          "DELETE FROM users WHERE email = $1",
-          [email]
-        );
-        res.json("User has been deleted");
-      }
+      res.json("User has been deleted");
     }
   } catch (error) {
     res.status(500).json(error.message);

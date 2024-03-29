@@ -1,3 +1,4 @@
+import { read } from "fs";
 import pool from "../database/connection.js";
 import { nanoid } from "nanoid";
 
@@ -15,6 +16,7 @@ export async function createService(req, res) {
       service_date,
       vehicle_id,
       user_id,
+      progress,
     } = req.body;
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
@@ -25,7 +27,7 @@ export async function createService(req, res) {
     const service_id = generatedID;
     // Insert details into service table
     const newService = await pool.query(
-      "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, notes, service_date, user_id, vehicle_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+      "INSERT INTO service (service_id, next_mileage, next_date, cost, service_name, place, notes, service_date, user_id, vehicle_id, progress) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
       [
         service_id,
         next_mileage,
@@ -37,6 +39,7 @@ export async function createService(req, res) {
         service_date,
         user_id,
         vehicle_id,
+        progress,
       ]
     );
 
@@ -59,6 +62,7 @@ export async function createService(req, res) {
         service_date: readNewService.rows[0].service_date,
         user_id: readNewService.rows[0].user_id,
         vehicle_id: readNewService.rows[0].vehicle_id,
+        progress: readNewService.rows[0].vehicle_id,
       },
     };
     res.json(apiResponse);
@@ -70,20 +74,9 @@ export async function createService(req, res) {
 // Get all service - ADMIN
 export async function getAllServiceAdmin(req, res) {
   try {
-    // Read admin_id data from token
-    const authData = req.user;
-    const admin_id = authData.admin_id;
-    const checkAdminID = await pool.query(
-      "SELECT * FROM users WHERE admin_id=$1",
-      [admin_id]
-    );
-    if (checkAdminID.rowCount === 0) {
-      return res.status(404).json("Admin id not found. Not authorized!");
-    } else {
-      // List all services in links table regardless of user
-      const allService = await pool.query("SELECT * FROM service");
-      return res.json(allService.rows);
-    }
+    // List all services in links table regardless of user
+    const allService = await pool.query("SELECT * FROM service");
+    return res.json(allService.rows);
   } catch (error) {
     res.status(500).json(error.message);
   }
@@ -96,7 +89,6 @@ export async function getAllserviceOneUserAdmin(req, res) {
     const authData = req.user;
     const admin_id = authData.admin_id;
     const { user_id } = req.body;
-
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
       [admin_id]
@@ -126,7 +118,6 @@ export async function getAllService(req, res) {
     // Read user_id data from token
     const authData = req.user;
     const user_id = authData.user_id;
-
     const checkUserID = await pool.query(
       "SELECT * FROM users WHERE user_id=$1",
       [user_id]
@@ -189,10 +180,11 @@ export async function updateServiceUser(req, res) {
       place,
       notes,
       service_date,
+      progress,
     } = req.body;
     // Update links with user_id specified in token
     const updateService = await pool.query(
-      "UPDATE service SET (next_mileage, next_date, cost, service_name, place, notes, service_date) = ($1, $2, $3, $4, $5, $6, $7) WHERE service_id= $8",
+      "UPDATE service SET (next_mileage, next_date, cost, service_name, place, notes, service_date, progress) = ($1, $2, $3, $4, $5, $6, $7, $8) WHERE service_id= $9",
       [
         next_mileage,
         next_date,
@@ -201,6 +193,7 @@ export async function updateServiceUser(req, res) {
         place,
         notes,
         service_date,
+        progress,
         service_id,
       ]
     );
@@ -221,6 +214,7 @@ export async function updateServiceUser(req, res) {
       notes: updateServiceRead.rows[0].notes,
       service_date: updateServiceRead.rows[0].service_date,
       service_id: updateServiceRead.rows[0].service_id,
+      progress: updateServiceRead.rows[0].service_id,
     };
 
     res.status(200).json(updatedServiceData);

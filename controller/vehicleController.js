@@ -61,20 +61,8 @@ export async function createVehicle(req, res) {
 // Get all vehicle - ADMIN
 export async function getAllVehicleAdmin(req, res) {
   try {
-    // Read admin_id data from token
-    const authData = req.user;
-    const admin_id = authData.admin_id;
-    const checkAdminID = await pool.query(
-      "SELECT * FROM users WHERE admin_id=$1",
-      [admin_id]
-    );
-    if (checkAdminID.rowCount === 0) {
-      return res.status(404).json("Admin id not found. Not authorized!");
-    } else {
-      // List all vehicles in vehicle table regardless of user
-      const allVehicle = await pool.query("SELECT * FROM vehicle");
-      return res.json(allVehicle.rows);
-    }
+    const allVehicle = await pool.query("SELECT * FROM vehicle");
+    return res.json(allVehicle.rows);
   } catch (error) {
     res.status(500).json(error.message);
   }
@@ -86,8 +74,7 @@ export async function getAllVehicleOneUserAdmin(req, res) {
     // Read admin_id data from token
     const authData = req.user;
     const admin_id = authData.admin_id;
-    const { email } = req.body;
-
+    const { user_id } = req.body;
     const checkAdminID = await pool.query(
       "SELECT * FROM users WHERE admin_id=$1",
       [admin_id]
@@ -97,13 +84,13 @@ export async function getAllVehicleOneUserAdmin(req, res) {
     } else {
       // List all vehicles in vehicles table from one user
       const allVehicle = await pool.query(
-        "SELECT * FROM vehicle WHERE email = $1",
-        [email]
+        "SELECT * FROM vehicle WHERE user_id = $1",
+        [user_id]
       );
       if (allVehicle.rowCount === 0) {
-        return res.status(404).json("No vehicle with specified email");
+        return res.status(404).json("No vehicle with specified user_id");
       } else {
-        return res.json(allVehicles.rows);
+        return res.json(allVehicle.rows);
       }
     }
   } catch (error) {
@@ -235,30 +222,12 @@ export async function updateVehicleUser(req, res) {
 // Delete a vehicle - ADMIN
 export async function deleteOneVehicleAdmin(req, res) {
   try {
-    const authData = req.user;
-    const admin_id = authData.admin_id;
-    const vehicle_id = req.params;
-    const checkAdminID = await pool.query(
-      "SELECT * FROM users WHERE admin_id=$1",
-      [admin_id]
+    const { vehicle_id } = req.body;
+    const deleteOneVehicle = await pool.query(
+      "DELETE FROM vehicle WHERE vehicle_id = $1",
+      [vehicle_id]
     );
-    if (checkAdminID.rowCount === 0) {
-      return res.status(404).json("Admin id not found. Not authorized!");
-    } else {
-      const checkVehicleId = await pool.query(
-        "SELECT * FROM vehicle WHERE vehicle_id=$1",
-        [vehicle_id]
-      );
-      if (checkVehicleId.rowCount === 0) {
-        return res.status(404).json("Vehicle not found.");
-      } else {
-        const deleteOneVehicle = await pool.query(
-          "DELETE FROM vehicle WHERE vehicle_id = $1",
-          [vehicle_id]
-        );
-        res.json("Vehicle has been deleted");
-      }
-    }
+    res.json("Vehicle has been deleted");
   } catch (error) {
     res.status(500).json(error.message);
   }
