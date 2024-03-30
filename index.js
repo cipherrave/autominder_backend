@@ -39,13 +39,10 @@ import {
   getOneServiceAdmin,
   updateServiceUser,
 } from "./controller/serviceController.js";
-import multer from "multer";
-
-const upload = multer({ dest: "./public/data/uploads/" });
 
 const app = express();
-//import links
 
+//import links
 dotenv.config();
 const port = process.env.PORT;
 
@@ -96,11 +93,6 @@ app.post("/register", createUser);
 app.post("/login", loginUser);
 app.put("/user/updateUser", updateUser);
 app.delete("/user/deleteUser", isAuth, deleteUser);
-app.post("/user/photo", upload.single("avatar"), function (req, res) {
-  // req.file is the `avatar` file
-  // req.body will hold the text fields, if there were any
-  console.log(req.file, req.body);
-});
 
 // Admin Vehicle Routes
 app.get("/admin/vehicle", getOneVehicleAdmin);
@@ -113,11 +105,6 @@ app.post("/vehicle/create", createVehicle);
 app.get("/user/vehicle/all", isAuth, getAllVehicle);
 app.put("/user/vehicle/update", updateVehicleUser);
 app.delete("/user/vehicle/delete", deleteVehicleUser);
-app.post("/user/vehicle/photos", upload.single("avatar"), function (req, res) {
-  // req.file is the `avatar` file
-  // req.body will hold the text fields, if there were any
-  console.log(req.file, req.body);
-});
 
 // Admin Service Routes
 app.get("/admin/service", getOneServiceAdmin);

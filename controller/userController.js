@@ -12,7 +12,7 @@ export async function createAdmin(req, res) {
     service: "gmail",
     auth: {
       user: "cipherravedev@gmail.com",
-      pass: "xmdjfkaysfvnfuaz",
+      pass: "zmhmviixzmzururu",
     },
   });
 
@@ -81,7 +81,7 @@ export async function createUser(req, res) {
     service: "gmail",
     auth: {
       user: "cipherravedev@gmail.com",
-      pass: "xmdjfkaysfvnfuaz",
+      pass: "zmhmviixzmzururu",
     },
   });
 
